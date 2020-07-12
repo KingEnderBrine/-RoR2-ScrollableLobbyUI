@@ -34,6 +34,9 @@
       <HintPath>..\libs\R2API.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="Rewired_Core">
+      <HintPath>..\libs\Rewired_Core.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\libs\Unity.TextMeshPro.dll</HintPath>
     </Reference>
