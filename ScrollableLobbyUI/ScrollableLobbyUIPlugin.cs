@@ -3,7 +3,7 @@
 namespace ScrollableLobbyUI
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.0.0")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.1.0")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {
@@ -16,6 +16,11 @@ namespace ScrollableLobbyUI
             On.RoR2.UI.LoadoutPanelController.Awake += UIHooks.LoadoutPanelControllerAwake;
             On.RoR2.UI.LoadoutPanelController.Row.ctor += UIHooks.LoadoutPanelControllerRowCtor;
             On.RoR2.UI.LoadoutPanelController.Row.FinishSetup += UIHooks.LoadoutPanelControllerRowFinishSetup;
+
+            On.RoR2.CharacterSelectBarController.Awake += (orig, self) =>
+            {
+                self.gameObject.AddComponent<CharacterSelectBarControllerReplacement>();
+            };
         }
     }
 }
