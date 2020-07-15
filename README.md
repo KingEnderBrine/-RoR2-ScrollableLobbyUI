@@ -1,5 +1,5 @@
 # Description
-Adds scrolling to skills overview and loadout. Mainly used by [ExtraSkillSlots](https://thunderstore.io/package/KingEnderBrine/ExtraSkillSlots/)
+Adds scrolling to skills overview, loadout and characters select. Mainly used by [ExtraSkillSlots](https://thunderstore.io/package/KingEnderBrine/ExtraSkillSlots/)
 
 # Future
 * Add horizontal scrolling to individual loadout rows. This will allow developers to add much more skills/skins, because you will be able to select them.
