@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using R2API.Utils;
+using RewiredConsts;
 using RoR2;
 using RoR2.UI;
 using System;
@@ -17,6 +18,14 @@ namespace ScrollableLobbyUI
         {
             orig(self);
 
+            var uiLayerKey = self.GetComponentInParent<UILayerKey>();
+
+            //Disabling buttons navigation if selected right panel,
+            //so extremely long rows in loadout will not interfere in artifacts selection
+            var loadoutHelper = uiLayerKey.gameObject.AddComponent<ButtonsNavigationController>();
+            loadoutHelper.requiredTopLayer = uiLayerKey;
+            loadoutHelper.loadoutPanel = self;
+
             //Adding container on top of LoadoutPanelController
             AddScrollPanel(self.transform, "LoadoutScrollPanel");
             //Adding container on top of SkillPanel
@@ -24,7 +33,7 @@ namespace ScrollableLobbyUI
 
             //Adding scrolling with stick for skills overview
             var scrollHelper = skillScrollPanel.AddComponent<GamepadScrollRectHelper>();
-            scrollHelper.requiredTopLayer = skillScrollPanel.transform.parent.parent.GetComponent<UILayerKey>();
+            scrollHelper.requiredTopLayer = uiLayerKey;
 
             GameObject AddScrollPanel(Transform panel, string name)
             {
@@ -35,17 +44,14 @@ namespace ScrollableLobbyUI
 
                 scrollPanel.AddComponent<MPEventSystemLocator>();
 
-                var scrollPanelImage = scrollPanel.AddComponent<Image>();
-                scrollPanelImage.raycastTarget = false;
+                var scrollPanelMask = scrollPanel.AddComponent<RectMask2D>();
 
-                var scrollPanelMask = scrollPanel.AddComponent<Mask>();
-                scrollPanelMask.showMaskGraphic = false;
-
-                var scrollPanelRect = scrollPanel.AddComponent<ScrollRect>();
+                var scrollPanelRect = scrollPanel.AddComponent<ConstrainedScrollRect>();
                 scrollPanelRect.horizontal = false;
                 scrollPanelRect.content = panel.GetComponent<RectTransform>();
                 scrollPanelRect.scrollSensitivity = 30;
                 scrollPanelRect.movementType = ScrollRect.MovementType.Clamped;
+                scrollPanelRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyScroll;
 
                 //Adding ContentSizeFilter, otherwise childs would have been wrong size
                 var panelContentSizeFilter = panel.gameObject.AddComponent<ContentSizeFitter>();
@@ -74,41 +80,65 @@ namespace ScrollableLobbyUI
                 return scrollPanel;
             }
         }
-        
+
         internal static void LoadoutPanelControllerRowFinishSetup(On.RoR2.UI.LoadoutPanelController.Row.orig_FinishSetup orig, object self, bool addWIPIcons)
         {
             orig(self, addWIPIcons);
+
+            var rowRectTransform = self.GetFieldValue<RectTransform>("rowPanelTransform");
             var buttonContainerTransform = self.GetFieldValue<RectTransform>("buttonContainerTransform");
             foreach (var button in buttonContainerTransform.GetComponentsInChildren<HGButton>())
             {
                 //Scroll to selected row if it's not fully visible
                 button.onSelect.AddListener(new UnityEngine.Events.UnityAction(() =>
                 {
-                    var scrollRect = button.GetComponentInParent<ScrollRect>();
-                    var eventSystemLocator = scrollRect.GetComponent<MPEventSystemLocator>();
+                    var buttonsScrollRect = button.GetComponentInParent<ConstrainedScrollRect>();
+                    var rowsScrollRect = buttonsScrollRect.redirectConstrained;
+                    var eventSystemLocator = rowsScrollRect.GetComponent<MPEventSystemLocator>();
 
                     if (!eventSystemLocator || !eventSystemLocator.eventSystem || eventSystemLocator.eventSystem.currentInputSource != MPEventSystem.InputSource.Gamepad)
                     {
                         return;
                     }
 
-                    var contentPanel = scrollRect.content;
-                    var rectTransform = button.transform.parent.parent.GetComponent<RectTransform>();
+                    var rowsContentPanel = rowsScrollRect.content;
 
-                    var rowPosition = (Vector2)scrollRect.transform.InverseTransformPoint(rectTransform.position);
-                    var scrollHeight = scrollRect.GetComponent<RectTransform>().rect.height;
-                    var halfRowHeight = rectTransform.rect.height / 2;
+                    var rowPosition = (Vector2)rowsScrollRect.transform.InverseTransformPoint(rowRectTransform.position);
+                    var rowsScrollHeight = rowsScrollRect.GetComponent<RectTransform>().rect.height;
+                    var halfRowHeight = rowRectTransform.rect.height / 2;
 
-                    if (rowPosition.y - halfRowHeight < -scrollHeight)
+                    if (rowPosition.y - halfRowHeight < -rowsScrollHeight)
                     {
-                        contentPanel.anchoredPosition = new Vector2(contentPanel.anchoredPosition.x,
-                            -rectTransform.anchoredPosition.y - scrollHeight + halfRowHeight);
+                        rowsContentPanel.anchoredPosition = new Vector2(
+                            rowsContentPanel.anchoredPosition.x,
+                            -rowRectTransform.anchoredPosition.y - rowsScrollHeight + halfRowHeight);
+                    }
+                    else if (rowPosition.y + halfRowHeight > 0)
+                    {
+                        rowsContentPanel.anchoredPosition = new Vector2(
+                            rowsContentPanel.anchoredPosition.x,
+                            -rowRectTransform.anchoredPosition.y - halfRowHeight);
                     }
 
-                    if (rowPosition.y + halfRowHeight > 0)
+                    var buttonsContentPanel = buttonsScrollRect.content;
+                    var buttonRectTransform = button.GetComponent<RectTransform>();
+
+                    var buttonPosition = (Vector2)buttonsScrollRect.transform.InverseTransformPoint(buttonRectTransform.position);
+                    var buttonsScrollWidth = buttonsScrollRect.GetComponent<RectTransform>().rect.width;
+                    var buttonWidth = buttonRectTransform.rect.width;
+                    var buttonsPadding = 8;
+
+                    if (buttonPosition.x + buttonWidth + buttonsPadding > 0)
                     {
-                        contentPanel.anchoredPosition = new Vector2(contentPanel.anchoredPosition.x,
-                            -rectTransform.anchoredPosition.y - halfRowHeight);
+                        buttonsContentPanel.anchoredPosition = new Vector2(
+                            -buttonRectTransform.anchoredPosition.x - buttonWidth + buttonsScrollWidth - buttonsPadding,
+                            buttonsContentPanel.anchoredPosition.y);
+                    }
+                    else if (buttonPosition.x - buttonsPadding < -buttonsScrollWidth)
+                    {
+                        buttonsContentPanel.anchoredPosition = new Vector2(
+                            -buttonRectTransform.anchoredPosition.x + buttonsPadding,
+                            buttonsContentPanel.anchoredPosition.y);
                     }
                 }));
             }
@@ -118,10 +148,73 @@ namespace ScrollableLobbyUI
         {
             orig(self, owner, bodyIndex, titleToken);
 
-            //Disabling sorting override
+            //Disabling sorting override because it not work with mask
             var highlightRect = self.GetFieldValue<RectTransform>("choiceHighlightRect");
             highlightRect.GetComponent<RefreshCanvasDrawOrder>().enabled = false;
             highlightRect.GetComponent<Canvas>().overrideSorting = false;
+
+            var buttonContainer = self.GetFieldValue<RectTransform>("buttonContainerTransform");
+            var rowPanel = self.GetFieldValue<RectTransform>("rowPanelTransform");
+            
+            var rowHorizontalLayout = rowPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
+
+            var panel = rowPanel.Find("Panel");
+            var slotLabel = rowPanel.Find("SlotLabel");
+            
+            var labelContainer = new GameObject();
+            labelContainer.transform.SetParent(rowPanel, false);
+            panel.SetParent(labelContainer.transform, false);
+            slotLabel.SetParent(labelContainer.transform, false);
+
+            var slotLabelRect = slotLabel.GetComponent<RectTransform>();
+            slotLabelRect.anchoredPosition = new Vector2(0, 0);
+            
+            var labelContainerLayout = labelContainer.AddComponent<LayoutElement>();
+            labelContainerLayout.minHeight = 0;
+            labelContainerLayout.preferredHeight = 96;
+            labelContainerLayout.minWidth = 128;
+            
+            var labelContainerRect = labelContainer.GetComponent<RectTransform>();
+            labelContainerRect.anchorMin = new Vector2(0, 0);
+            labelContainerRect.anchorMax = new Vector2(1, 1);
+            labelContainerRect.pivot = new Vector2(0, 0F);
+
+            var scrollPanel = new GameObject();
+            scrollPanel.transform.SetParent(rowPanel, false);
+
+            buttonContainer.SetParent(scrollPanel.transform, false);
+            highlightRect.SetParent(scrollPanel.transform, false);
+
+            var mask = scrollPanel.AddComponent<RectMask2D>();
+
+            var scrollPanelLayout = scrollPanel.AddComponent<LayoutElement>();
+            scrollPanelLayout.preferredWidth = 100000;
+
+            var scrollRect = scrollPanel.AddComponent<ConstrainedScrollRect>();
+            scrollRect.horizontal = true;
+            scrollRect.vertical = false;
+            scrollRect.content = buttonContainer;
+            scrollRect.scrollSensitivity = -30;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyDrag;
+            scrollRect.redirectConstrained = rowPanel.GetComponentInParent<ConstrainedScrollRect>();
+
+            var scrollPanelRectTransform = scrollPanel.GetComponent<RectTransform>();
+            scrollPanelRectTransform.pivot = new Vector2(1, 0.5F);
+            scrollPanelRectTransform.anchorMin = new Vector2(0, 0);
+            scrollPanelRectTransform.anchorMax = new Vector2(1, 1);
+
+            //Adding ContentSizeFilter, otherwise childs would have been wrong size
+            var buttonContainerSizeFilter = buttonContainer.gameObject.AddComponent<ContentSizeFitter>();
+            buttonContainerSizeFilter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            buttonContainerSizeFilter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            buttonContainer.pivot = new Vector2(0, 0.5F);
+
+            buttonContainer.Find("Spacer").gameObject.SetActive(false);
+
+            var buttonContainerHorizontalLayout = buttonContainer.GetComponent<HorizontalLayoutGroup>();
+            buttonContainerHorizontalLayout.padding = new RectOffset(8, 8, 8, 8);
         }
 
         internal static void CharacterSelectControllerRebuildLocal(ILContext il)

@@ -3,7 +3,7 @@
 namespace ScrollableLobbyUI
 {
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.1.0")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.2.0")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {
