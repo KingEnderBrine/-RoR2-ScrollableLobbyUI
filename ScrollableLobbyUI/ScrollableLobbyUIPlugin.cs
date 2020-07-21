@@ -1,9 +1,12 @@
 ﻿using BepInEx;
+using R2API;
+using R2API.Utils;
 
 namespace ScrollableLobbyUI
 {
+    [R2APISubmoduleDependency(nameof(PrefabAPI))]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.2.0")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.2.1")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {

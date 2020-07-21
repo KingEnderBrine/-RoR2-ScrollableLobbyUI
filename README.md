@@ -28,6 +28,10 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 ***
 # Changelog
 
+**1.2.1**
+
+* Added missing R2API submodule dependency
+
 **1.2.0**
 
 * Added horizontal scrolling to individual loadout rows. This will allow developers to add much more skills/skins, because you will be able to select them.
