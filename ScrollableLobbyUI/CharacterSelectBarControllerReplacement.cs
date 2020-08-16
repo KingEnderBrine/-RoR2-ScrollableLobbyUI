@@ -2,10 +2,10 @@
 using R2API.Utils;
 using RoR2;
 using RoR2.UI;
-using RoR2.UI.SkinControllers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -16,23 +16,24 @@ namespace ScrollableLobbyUI
     public class CharacterSelectBarControllerReplacement : MonoBehaviour
     {
         public GameObject choiceButtonPrefab;
-        public GameObject WIPButtonPrefab;
         public GameObject fillButtonPrefab;
         public RectTransform iconContainer;
         public GridLayoutGroup gridLayoutGroup;
 
         private const int survivorsPerPage = 14;
         private const int buttonSide = 37;
+        private const float delayBeforeForcingSurvivor = 0.1f;
 
         private UIElementAllocator<SurvivorIconController> survivorIconControllers;
         private CharacterSelectBarController characterSelectBar;
         private HGButtonHistory buttonHistory;
+        private MPEventSystemLocator eventSystemLocator;
 
-        private int wipSurvivorsCount;
         private int fillerCount;
+        private bool forcedSurvivor;
+        private float delayTimer;
 
         private readonly List<SurvivorIndex> survivorIndexList = new List<SurvivorIndex>();
-        private readonly List<GameObject> wipSurvivorIcons = new List<GameObject>();
         private readonly List<GameObject> fillerIcons = new List<GameObject>();
         private HGButton previousButtonComponent;
         private HGButton nextButtonComponent;
@@ -42,9 +43,22 @@ namespace ScrollableLobbyUI
         public bool IsOnFirstPage => currentPageIndex == 0;
         public bool IsOnLastPage => pageCount == currentPageIndex + 1;
 
+        private bool isEclipseRun
+        {
+            get
+            {
+                return PreGameController.instance && PreGameController.instance.gameModeIndex == GameModeCatalog.FindGameModeIndex("EclipseRun");
+            }
+        }
+
         private bool ShouldDisplaySurvivor(SurvivorDef survivorDef)
         {
-            return survivorDef != null;
+            if (!isEclipseRun)
+            {
+                return survivorDef != null;
+            }
+
+            return (SurvivorIndex)EclipseRun.cvEclipseSurvivorIndex.value == survivorDef.survivorIndex;
         }
 
         private void RebuildPage()
@@ -94,32 +108,6 @@ namespace ScrollableLobbyUI
                 element.SetFieldValue("shouldRebuild", true);
             }
 
-            int wipCountOnPage;
-            if (IsOnLastPage)
-            {
-                wipCountOnPage = wipSurvivorsCount % survivorsPerPage;
-            }
-            else
-            {
-                wipCountOnPage = Mathf.Clamp((currentPageIndex + 1) * survivorsPerPage - survivorIndexList.Count, 0, survivorsPerPage);
-            }
-
-            for (var index = 0; index < wipSurvivorsCount; ++index)
-            {
-                var wipIcon = wipSurvivorIcons[index];
-                if (index >= wipCountOnPage)
-                {
-                    wipIcon.SetActive(false);
-                    continue;
-                }
-                wipIcon.SetActive(true);
-
-                //For some reason colors were changing after reanabling object
-                //using this to restore color
-                wipIcon.GetComponent<HGButton>().colors = new ColorBlock();
-                wipIcon.GetComponent<ButtonSkinController>().InvokeMethod("OnSkinUI");
-            }
-
             for (var index = 0; index < fillerCount; index++)
             {
                 fillerIcons[index].gameObject.SetActive(IsOnLastPage);
@@ -127,13 +115,19 @@ namespace ScrollableLobbyUI
 
             if (buttonHistory && buttonHistory.lastRememberedGameObject)
             {
-                if (buttonHistory.lastRememberedGameObject.activeInHierarchy)
+                if (eventSystemLocator && eventSystemLocator.eventSystem)
                 {
-                    buttonHistory.lastRememberedGameObject.GetComponent<HGButton>().OnSelect(new BaseEventData(EventSystem.current));
-                }
-                else
-                {
-                    elements.LastOrDefault(el => el.gameObject.activeInHierarchy)?.GetComponent<HGButton>().Select();
+                    if (eventSystemLocator.eventSystem.currentInputSource == MPEventSystem.InputSource.Gamepad)
+                    {
+                        if (buttonHistory.lastRememberedGameObject.activeInHierarchy)
+                        {
+                            buttonHistory.lastRememberedGameObject.GetComponent<HGButton>().OnSelect(new BaseEventData(EventSystem.current));
+                        }
+                        else
+                        {
+                            elements.LastOrDefault(el => el.gameObject.activeInHierarchy)?.GetComponent<HGButton>().Select();
+                        }
+                    }
                 }
             }
 
@@ -153,14 +147,12 @@ namespace ScrollableLobbyUI
                     survivorIndexList.Add(survivorIndex);
                 }
             }
-            wipSurvivorsCount = survivorMaxCount - survivorIndexList.Count;
             fillerCount = pageCount * survivorsPerPage - survivorMaxCount;
         }
 
         private void GatherCharacterSelectBarInfo()
         {
             choiceButtonPrefab = characterSelectBar.choiceButtonPrefab;
-            WIPButtonPrefab = characterSelectBar.WIPButtonPrefab;
             fillButtonPrefab = characterSelectBar.fillButtonPrefab;
             iconContainer = characterSelectBar.iconContainer;
             gridLayoutGroup = characterSelectBar.gridLayoutGroup;
@@ -179,15 +171,36 @@ namespace ScrollableLobbyUI
         {
             //Removing this component because of strictly defined cell size
             DestroyImmediate(GetComponent<AdjustGridLayoutCellSize>());
-            
+
             //Updating layout
             var layoutElement = GetComponent<LayoutElement>();
             layoutElement.preferredWidth = -1;
-            layoutElement.preferredHeight = layoutElement.minHeight;
+            layoutElement.preferredHeight = 156;
 
             ModifyGridLayout();
 
             AllocateCells();
+
+            var choiseGridContainer = new GameObject("SurvivorChoiseGridContainer");
+            choiseGridContainer.transform.SetParent(transform.parent, false);
+            choiseGridContainer.transform.SetSiblingIndex(2);
+            transform.SetParent(choiseGridContainer.transform, false);
+
+            var choiseGridHorizontalLayout = choiseGridContainer.AddComponent<HorizontalLayoutGroup>();
+            var choiseGridLayout = choiseGridContainer.AddComponent<LayoutElement>();
+            choiseGridLayout.preferredHeight = 156;
+
+            var choiseGridContainerContentFitter = choiseGridContainer.AddComponent<ContentSizeFitter>();
+            choiseGridContainerContentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            choiseGridContainerContentFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            var rightPanel = transform.parent?.parent?.parent;
+            var rightPanelVerticalLayout = rightPanel.GetComponent<VerticalLayoutGroup>();
+            if (rightPanelVerticalLayout)
+            {
+                var padding = rightPanelVerticalLayout.padding;
+                rightPanelVerticalLayout.padding = new RectOffset(padding.left, padding.right, 0, padding.bottom);
+            }
         }
 
         private void AllocateCells()
@@ -195,12 +208,6 @@ namespace ScrollableLobbyUI
             survivorIconControllers.AllocateElements(Mathf.Min(survivorsPerPage, survivorIndexList.Count));
             survivorIconControllers.elements[0].GetComponent<MPButton>().defaultFallbackButton = true;
             
-            for (var i = 0; i < Mathf.Min(wipSurvivorsCount, survivorsPerPage); i++)
-            {
-                var wipIcon = Instantiate(WIPButtonPrefab, iconContainer);
-                wipSurvivorIcons.Add(wipIcon);
-            }
-
             for (var i = 0; i < fillerCount; i++)
             {
                 fillerIcons.Add(Instantiate(fillButtonPrefab, iconContainer));
@@ -211,25 +218,29 @@ namespace ScrollableLobbyUI
         {
             var mpEventSystemLocator = GetComponent<MPEventSystemLocator>();
             var survivorChoiseGrid = transform.parent.gameObject;
-            var leftHandPanel = survivorChoiseGrid.transform.parent.gameObject;
-            var subheaderPanel = leftHandPanel.transform.Find("SurvivorInfoPanel, Active (Layer: Secondary)").Find("SubheaderPanel (Overview, Skills, Loadout)");
-            var uiLayerKey = leftHandPanel.GetComponent<UILayerKey>();
+            var uiLayerKey = survivorChoiseGrid.GetComponentInParent<UILayerKey>();
 
-            previousButtonComponent = SetupPagingButton("Previous", "Left", SelectPreviousPage, nameof(RewiredConsts.Action.UITabLeft), 0);
-            nextButtonComponent = SetupPagingButton("Next", "Right", SelectNextPage, nameof(RewiredConsts.Action.UITabRight), 2);
 
-            HGButton SetupPagingButton(string prefix, string buttonPrefix, System.Action action, string actionName, int siblingIndex)
+            previousButtonComponent = SetupPagingButton("Previous", "Left", SelectPreviousPage, nameof(RewiredConsts.Action.UITabLeft), 0, 2);
+            nextButtonComponent = SetupPagingButton("Next", "Right", SelectNextPage, nameof(RewiredConsts.Action.UITabRight), 10, 6);
+
+            HGButton SetupPagingButton(string prefix, string buttonPrefix, System.Action action, string actionName, int siblingIndex, int glyphIndex)
             {
                 var buttonContainer = new GameObject($"{prefix}ButtonContainer");
                 buttonContainer.transform.SetParent(transform.parent, false);
                 buttonContainer.transform.SetSiblingIndex(siblingIndex);
+                buttonContainer.layer = 5;
 
                 var buttonVerticalLayout = buttonContainer.AddComponent<VerticalLayoutGroup>();
                 buttonVerticalLayout.childControlHeight = true;
                 buttonVerticalLayout.childControlWidth = true;
 
+                var buttonContainerLayout = buttonContainer.AddComponent<LayoutElement>();
+                buttonContainerLayout.preferredHeight = 156;
+
                 var button = Resources.Load<GameObject>($"prefabs/ui/controls/buttons/{buttonPrefix}Button").InstantiateClone($"{prefix}Page");
                 button.transform.SetParent(buttonContainer.transform, false);
+                button.layer = 5;
 
                 var buttonComponent = button.GetComponent<HGButton>();
                 buttonComponent.onClick = new Button.ButtonClickedEvent();
@@ -239,19 +250,89 @@ namespace ScrollableLobbyUI
                 buttonLayout.preferredWidth = buttonSide;
                 buttonLayout.minWidth = buttonSide;
 
-                var glyph = subheaderPanel.Find($"GenericGlyph ({buttonPrefix})").gameObject.InstantiateClone($"{prefix}Glyph");
+                //var glyph = subheaderPanel.Find($"GenericGlyph ({buttonPrefix})").gameObject.InstantiateClone($"{prefix}Glyph");
+                var glyph = new GameObject($"{prefix}Glyph");
                 glyph.transform.SetParent(buttonContainer.transform, false);
+                glyph.layer = 5;
                 glyph.transform.SetSiblingIndex(0);
                 glyph.SetActive(mpEventSystemLocator.eventSystem && mpEventSystemLocator.eventSystem.currentInputSource == MPEventSystem.InputSource.Gamepad);
 
-                var glyphLayout = glyph.GetComponent<LayoutElement>();
+                var glyphTransform = glyph.AddComponent<RectTransform>();
+                glyphTransform.anchoredPosition3D = new Vector3(0, 0, 0);
+                glyphTransform.localScale = new Vector3(1, 1, 1);
+                glyphTransform.sizeDelta = new Vector2(0, 0);
+
+                var glyphImage = glyph.AddComponent<Image>();
+                glyphImage.color = Color.white;
+                glyphImage.enabled = false;
+
+                var glyphLayout = glyph.AddComponent<LayoutElement>();
                 glyphLayout.minWidth = buttonSide;
 
-                var glyphText = glyph.transform.Find("Text").gameObject;
+                //var glyphText = glyph.transform.Find("Text").gameObject;
+                var glyphText = new GameObject($"Text");
+                glyphText.transform.SetParent(glyph.transform);
+                glyphText.layer = 5;
 
-                var glyphTextLayout = glyphText.GetComponent<LayoutElement>();
+                var glyphTextTransform = glyphText.AddComponent<RectTransform>();
+                glyphTextTransform.anchorMin = new Vector2(0, 0);
+                glyphTextTransform.anchorMax = new Vector2(1, 1);
+                glyphTextTransform.anchoredPosition3D = new Vector3(0, 0, 0);
+                glyphTextTransform.localScale = new Vector3(1, 1, 1);
+                glyphTextTransform.sizeDelta = new Vector2(48, 48);
+
+                glyphText.AddComponent<MPEventSystemLocator>();
+
+                var inputBindingDisplayController = glyphText.AddComponent<InputBindingDisplayController>();
+                inputBindingDisplayController.actionName = actionName;
+                inputBindingDisplayController.axisRange = Rewired.AxisRange.Full;
+                inputBindingDisplayController.useExplicitInputSource = true;
+                inputBindingDisplayController.explicitInputSource = MPEventSystem.InputSource.Gamepad;
+                inputBindingDisplayController.InvokeMethod("Awake");
+
+
+                var glyphTextLayout = glyphText.AddComponent<LayoutElement>();
                 glyphTextLayout.preferredHeight = buttonSide;
                 glyphTextLayout.preferredWidth = buttonSide;
+
+                var tmpBombDropShadows = Resources.Load<TMP_FontAsset>("tmpfonts/bombardier/tmpbombdropshadow.asset");
+                var hgTextMeshPro = glyphText.AddComponent<HGTextMeshProUGUI>();
+                hgTextMeshPro.raycastTarget = false;
+                hgTextMeshPro.text = $"<sprite=\"tmpsprXboxOneGlyphs\" name=\"texXBoxOneGlyphs_{glyphIndex}\">";
+                hgTextMeshPro.UpdateFontAsset();
+                hgTextMeshPro.fontSize = 24;
+                hgTextMeshPro.SetFieldValue("m_fontSizeBase", 16F);
+                hgTextMeshPro.fontSizeMin = 18;
+                hgTextMeshPro.fontSizeMax = 72;
+                hgTextMeshPro.fontWeight = FontWeight.Regular;
+                hgTextMeshPro.alignment = TextAlignmentOptions.Center;
+                hgTextMeshPro.wordWrappingRatios = 0.4F;
+                hgTextMeshPro.overflowMode = TextOverflowModes.Overflow;
+                hgTextMeshPro.enableKerning = true;
+                hgTextMeshPro.richText = true;
+                hgTextMeshPro.parseCtrlCharacters = true;
+                hgTextMeshPro.isOrthographic = true;
+
+
+                var glyphTMP = new GameObject("TMP SubMeshUI");
+                glyphTMP.transform.SetParent(glyphText.transform);
+                glyphTMP.layer = 5;
+
+                var glyphTMPTransform = glyphTMP.AddComponent<RectTransform>();
+                glyphTMPTransform.anchoredPosition3D = new Vector3(0, 0, 0);
+                glyphTMPTransform.localScale = new Vector3(1, 1, 1);
+                glyphTMPTransform.sizeDelta = new Vector2(0, 0);
+
+                var material = new Material(Shader.Find("TextMeshPro/Sprite"));
+                var texture = Resources.Load<Texture>("sprite assets/texXBoxOneGlyphs.png");
+
+                var glyphTMPCanvasRenderer = glyphTMP.AddComponent<CanvasRenderer>();
+                glyphTMPCanvasRenderer.SetMaterial(material, texture);
+
+                var glyphTMPSubMesh = glyphTMP.AddComponent<TMP_SubMeshUI>();
+                glyphTMPSubMesh.fontAsset = tmpBombDropShadows;
+                glyphTMPSubMesh.spriteAsset = Resources.Load<TMP_SpriteAsset>("sprite assets/tmpsprXboxOneGlyphs.asset");
+                glyphTMPSubMesh.SetFieldValue("m_TextComponent", hgTextMeshPro);
 
                 var pageEvent = survivorChoiseGrid.AddComponent<HGGamepadInputEvent>();
                 pageEvent.requiredTopLayer = uiLayerKey;
@@ -264,18 +345,19 @@ namespace ScrollableLobbyUI
             }
         }
 
-        private void Awake()
+        private void Start()
         {
             buttonHistory = GetComponent<HGButtonHistory>();
             characterSelectBar = GetComponent<CharacterSelectBarController>();
+            eventSystemLocator = GetComponent<MPEventSystemLocator>();
             GatherCharacterSelectBarInfo();
             
             survivorIconControllers = new UIElementAllocator<SurvivorIconController>(iconContainer, choiceButtonPrefab);
             
             GatherSurvivorsInfo();
 
-            SetupPagingStuff();
             PrepareContainer();
+            SetupPagingStuff();
 
             RebuildPage();
         }
@@ -298,6 +380,22 @@ namespace ScrollableLobbyUI
             }
             currentPageIndex--;
             RebuildPage();
+        }
+
+        public void Update()
+        {
+            delayTimer += Time.deltaTime;
+            if (delayTimer < delayBeforeForcingSurvivor || forcedSurvivor)
+            {
+                return;
+            }
+            forcedSurvivor = true;
+            if (!isEclipseRun)
+            {
+                return;
+            }
+            RebuildPage();
+            survivorIconControllers.elements[0].PushSurvivorIndexToCharacterSelect();
         }
     }
 }

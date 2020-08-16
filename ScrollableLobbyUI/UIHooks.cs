@@ -8,17 +8,20 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace ScrollableLobbyUI
 {
     internal static class UIHooks
     {
-        internal static void LoadoutPanelControllerAwake(On.RoR2.UI.LoadoutPanelController.orig_Awake orig, LoadoutPanelController self)
+        private static List<RoR2.UI.HGButton> buttonsWithListeners = new List<RoR2.UI.HGButton>();
+
+        internal static void LoadoutPanelControllerAwake(On.RoR2.UI.LoadoutPanelController.orig_Awake orig, RoR2.UI.LoadoutPanelController self)
         {
             orig(self);
 
-            var uiLayerKey = self.GetComponentInParent<UILayerKey>();
+            var uiLayerKey = self.GetComponentInParent<RoR2.UI.UILayerKey>();
 
             //Disabling buttons navigation if selected right panel,
             //so extremely long rows in loadout will not interfere in artifacts selection
@@ -29,11 +32,21 @@ namespace ScrollableLobbyUI
             //Adding container on top of LoadoutPanelController
             AddScrollPanel(self.transform, "LoadoutScrollPanel");
             //Adding container on top of SkillPanel
-            var skillScrollPanel = AddScrollPanel(self.transform.parent.parent.Find("SkillPanel"), "LoadoutScrollPanel");
+            var skillScrollPanel = AddScrollPanel(self.transform.parent.parent.Find("SkillPanel"), "SkillsScrollPanel");
 
-            //Adding scrolling with stick for skills overview
-            var scrollHelper = skillScrollPanel.AddComponent<GamepadScrollRectHelper>();
-            scrollHelper.requiredTopLayer = uiLayerKey;
+            //Moving out descriptionPanel, so it will not be hidden by mask
+            var descriptionPanel = skillScrollPanel.transform.GetChild(0).Find("DescriptionPanel, Skill");
+
+            var skillScrollContainer = new GameObject("SkillScrollContainer");
+            skillScrollContainer.transform.SetParent(skillScrollPanel.transform.parent, false);
+            skillScrollPanel.transform.SetParent(skillScrollContainer.transform, false);
+            descriptionPanel.SetParent(skillScrollContainer.transform, false);
+
+            var rect = skillScrollContainer.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0, 0);
+            rect.anchorMax = new Vector2(1, 1);
+            rect.pivot = new Vector2(0.5F, 1);
+            rect.sizeDelta = new Vector2(0, 0);
 
             GameObject AddScrollPanel(Transform panel, string name)
             {
@@ -42,7 +55,7 @@ namespace ScrollableLobbyUI
                 scrollPanel.transform.SetParent(panel.transform.parent, false);
                 panel.transform.SetParent(scrollPanel.transform, false);
 
-                scrollPanel.AddComponent<MPEventSystemLocator>();
+                scrollPanel.AddComponent<RoR2.UI.MPEventSystemLocator>();
 
                 var scrollPanelMask = scrollPanel.AddComponent<RectMask2D>();
 
@@ -62,8 +75,7 @@ namespace ScrollableLobbyUI
                 scrollPanelRectTransform.pivot = new Vector2(0.5F, 1F);
                 scrollPanelRectTransform.anchorMin = new Vector2(0, 0);
                 scrollPanelRectTransform.anchorMax = new Vector2(1, 1);
-                scrollPanelRectTransform.offsetMin = new Vector2(4, 4);
-                scrollPanelRectTransform.offsetMax = new Vector2(4, 4);
+                scrollPanelRectTransform.sizeDelta = new Vector2(0, 0);
 
                 panel.GetComponent<RectTransform>().pivot = new Vector2(0.5F, 1);
 
@@ -81,22 +93,28 @@ namespace ScrollableLobbyUI
             }
         }
 
+        internal static void LoadoutPanelControllerOnDestroy(On.RoR2.UI.LoadoutPanelController.orig_OnDestroy orig, RoR2.UI.LoadoutPanelController self)
+        {
+            orig(self);
+            buttonsWithListeners.Clear();
+        }
+
         internal static void LoadoutPanelControllerRowFinishSetup(On.RoR2.UI.LoadoutPanelController.Row.orig_FinishSetup orig, object self, bool addWIPIcons)
         {
             orig(self, addWIPIcons);
 
             var rowRectTransform = self.GetFieldValue<RectTransform>("rowPanelTransform");
             var buttonContainerTransform = self.GetFieldValue<RectTransform>("buttonContainerTransform");
-            foreach (var button in buttonContainerTransform.GetComponentsInChildren<HGButton>())
+            foreach (var button in buttonContainerTransform.GetComponentsInChildren<RoR2.UI.HGButton>())
             {
                 //Scroll to selected row if it's not fully visible
-                button.onSelect.AddListener(new UnityEngine.Events.UnityAction(() =>
+                button.onSelect.AddListener(() =>
                 {
                     var buttonsScrollRect = button.GetComponentInParent<ConstrainedScrollRect>();
                     var rowsScrollRect = buttonsScrollRect.redirectConstrained;
-                    var eventSystemLocator = rowsScrollRect.GetComponent<MPEventSystemLocator>();
+                    var eventSystemLocator = rowsScrollRect.GetComponent<RoR2.UI.MPEventSystemLocator>();
 
-                    if (!eventSystemLocator || !eventSystemLocator.eventSystem || eventSystemLocator.eventSystem.currentInputSource != MPEventSystem.InputSource.Gamepad)
+                    if (!eventSystemLocator || !eventSystemLocator.eventSystem || eventSystemLocator.eventSystem.currentInputSource != RoR2.UI.MPEventSystem.InputSource.Gamepad)
                     {
                         return;
                     }
@@ -140,11 +158,11 @@ namespace ScrollableLobbyUI
                             -buttonRectTransform.anchoredPosition.x + buttonsPadding,
                             buttonsContentPanel.anchoredPosition.y);
                     }
-                }));
+                });
             }
         }
 
-        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object self, LoadoutPanelController owner, int bodyIndex, string titleToken)
+        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object self, RoR2.UI.LoadoutPanelController owner, int bodyIndex, string titleToken)
         {
             orig(self, owner, bodyIndex, titleToken);
 
@@ -223,7 +241,7 @@ namespace ScrollableLobbyUI
 
             c.GotoNext(
                 x => x.MatchLdcI4(0),
-                x => x.MatchStloc(23),
+                x => x.MatchStloc(26),
                 x => x.MatchBr(out var label),
                 x => x.MatchLdarg(0),
                 x => x.MatchLdarg(0));
@@ -241,7 +259,7 @@ namespace ScrollableLobbyUI
                 c.Emit(instuction.OpCode, instuction.Operand);
             }
 
-            var fieldInfo = typeof(CharacterSelectController).GetNestedType("StripDisplayData", BindingFlags.NonPublic).GetField("enabled");
+            var fieldInfo = typeof(RoR2.UI.CharacterSelectController).GetNestedType("StripDisplayData", BindingFlags.NonPublic).GetField("enabled");
             c.Emit(OpCodes.Ldfld, fieldInfo);
             c.EmitDelegate<Action<RectTransform, bool>>((skillStrip, enabled) =>
             {
@@ -255,6 +273,46 @@ namespace ScrollableLobbyUI
                 layoutElement.enabled = true;
                 layoutElement.minHeight = 0;
                 layoutElement.preferredHeight = 96;
+
+                var button = skillStrip.GetComponent<RoR2.UI.HGButton>();
+                if (buttonsWithListeners.Contains(button))
+                {
+                    return;
+                }
+
+                button.onSelect.AddListener(onScrollListener);
+                buttonsWithListeners.Add(button);
+
+                void onScrollListener()
+                {
+                    var rowsScrollRect = button.GetComponentInParent<ConstrainedScrollRect>();
+                    var eventSystemLocator = rowsScrollRect.GetComponent<RoR2.UI.MPEventSystemLocator>();
+
+                    if (!eventSystemLocator || !eventSystemLocator.eventSystem || eventSystemLocator.eventSystem.currentInputSource != RoR2.UI.MPEventSystem.InputSource.Gamepad)
+                    {
+                        return;
+                    }
+
+                    var rowsContentPanel = rowsScrollRect.content;
+                    var rowRectTransform = button.GetComponent<RectTransform>();
+
+                    var rowPosition = (Vector2)rowsScrollRect.transform.InverseTransformPoint(rowRectTransform.position);
+                    var rowsScrollHeight = rowsScrollRect.GetComponent<RectTransform>().rect.height;
+                    var halfRowHeight = rowRectTransform.rect.height / 2;
+
+                    if (rowPosition.y - halfRowHeight < -rowsScrollHeight)
+                    {
+                        rowsContentPanel.anchoredPosition = new Vector2(
+                            rowsContentPanel.anchoredPosition.x,
+                            -rowRectTransform.anchoredPosition.y - rowsScrollHeight + halfRowHeight);
+                    }
+                    else if (rowPosition.y + halfRowHeight > 0)
+                    {
+                        rowsContentPanel.anchoredPosition = new Vector2(
+                            rowsContentPanel.anchoredPosition.x,
+                            -rowRectTransform.anchoredPosition.y - halfRowHeight);
+                    }
+                }
             });
         }
     }
