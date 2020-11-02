@@ -3,6 +3,7 @@ using R2API.Utils;
 using RoR2;
 using RoR2.UI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -30,8 +31,6 @@ namespace ScrollableLobbyUI
         private MPEventSystemLocator eventSystemLocator;
 
         private int fillerCount;
-        private bool forcedSurvivor;
-        private float delayTimer;
 
         private readonly List<SurvivorIndex> survivorIndexList = new List<SurvivorIndex>();
         private readonly List<GameObject> fillerIcons = new List<GameObject>();
@@ -137,8 +136,6 @@ namespace ScrollableLobbyUI
 
         private void GatherSurvivorsInfo()
         {
-            var survivorMaxCount = SurvivorCatalog.survivorMaxCount;
-            pageCount = survivorMaxCount / survivorsPerPage + (survivorMaxCount % survivorsPerPage > 0 ? 1 : 0);
             for (int index = 0; index < SurvivorCatalog.idealSurvivorOrder.Length; ++index)
             {
                 SurvivorIndex survivorIndex = SurvivorCatalog.idealSurvivorOrder[index];
@@ -147,6 +144,10 @@ namespace ScrollableLobbyUI
                     survivorIndexList.Add(survivorIndex);
                 }
             }
+
+            var survivorMaxCount = survivorIndexList.Count;
+            pageCount = survivorMaxCount / survivorsPerPage + (survivorMaxCount % survivorsPerPage > 0 ? 1 : 0);
+
             fillerCount = pageCount * survivorsPerPage - survivorMaxCount;
         }
 
@@ -354,12 +355,25 @@ namespace ScrollableLobbyUI
             
             survivorIconControllers = new UIElementAllocator<SurvivorIconController>(iconContainer, choiceButtonPrefab);
             
+            StartCoroutine(StartDelayCoroutine());
+        }
+
+        private IEnumerator StartDelayCoroutine()
+        {
+            yield return new WaitForSeconds(delayBeforeForcingSurvivor);
+
             GatherSurvivorsInfo();
 
             PrepareContainer();
             SetupPagingStuff();
 
             RebuildPage();
+
+            if (!isEclipseRun)
+            {
+                yield break;
+            }
+            survivorIconControllers.elements[0].PushSurvivorIndexToCharacterSelect();
         }
 
         public void SelectNextPage()
@@ -380,22 +394,6 @@ namespace ScrollableLobbyUI
             }
             currentPageIndex--;
             RebuildPage();
-        }
-
-        public void Update()
-        {
-            delayTimer += Time.deltaTime;
-            if (delayTimer < delayBeforeForcingSurvivor || forcedSurvivor)
-            {
-                return;
-            }
-            forcedSurvivor = true;
-            if (!isEclipseRun)
-            {
-                return;
-            }
-            RebuildPage();
-            survivorIconControllers.elements[0].PushSurvivorIndexToCharacterSelect();
         }
     }
 }

@@ -315,5 +315,13 @@ namespace ScrollableLobbyUI
                 }
             });
         }
+        internal static void CharacterSelectBarControllerUpdate(On.RoR2.CharacterSelectBarController.orig_Update orig, RoR2.CharacterSelectBarController self)
+        {
+        }
+
+        internal static void CharacterSelectBarControllerStart(On.RoR2.CharacterSelectBarController.orig_Start orig, RoR2.CharacterSelectBarController self)
+        {
+            self.gameObject.AddComponent<CharacterSelectBarControllerReplacement>();
+        }
     }
 }
