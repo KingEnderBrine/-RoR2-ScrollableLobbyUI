@@ -7,7 +7,7 @@ namespace ScrollableLobbyUI
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [R2APISubmoduleDependency(nameof(PrefabAPI))]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.3.2")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.3.3")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {

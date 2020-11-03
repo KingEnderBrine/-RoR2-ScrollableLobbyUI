@@ -28,6 +28,10 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 ***
 # Changelog
 
+**1.3.3**
+
+* Minor update to allow `RandomCharacterSelection` to open page with selected character.
+
 **1.3.2**
 
 * Removed ability to select characters in an eclipse lobby (This was not intended behavior)

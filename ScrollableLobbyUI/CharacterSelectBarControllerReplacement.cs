@@ -395,5 +395,16 @@ namespace ScrollableLobbyUI
             currentPageIndex--;
             RebuildPage();
         }
+
+        public void OpenPageWithCharacter(SurvivorIndex survivorIndex)
+        {
+            var index = survivorIndexList.FindIndex(el => el == survivorIndex);
+            if (index == -1)
+            {
+                return;
+            }
+            currentPageIndex = index / survivorsPerPage;
+            RebuildPage();
+        }
     }
 }
