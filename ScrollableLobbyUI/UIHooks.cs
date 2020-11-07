@@ -1,21 +1,27 @@
-﻿using Mono.Cecil.Cil;
+﻿using IL.RoR2.Achievements;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using R2API.Utils;
-using RewiredConsts;
 using RoR2;
 using RoR2.UI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace ScrollableLobbyUI
 {
     internal static class UIHooks
     {
-        private static List<RoR2.UI.HGButton> buttonsWithListeners = new List<RoR2.UI.HGButton>();
+        //Full panel width ~ 310, choice witdh 64, left offset 12, padding 6, padding 12
+        private const int ruleFillerWidth = 87;
+        private const int ruleFillerHeight = 64;
+        private const float ruleScrollDuration = 0.1F;
+
+        private static readonly List<RoR2.UI.HGButton> buttonsWithListeners = new List<RoR2.UI.HGButton>();
 
         internal static void LoadoutPanelControllerAwake(On.RoR2.UI.LoadoutPanelController.orig_Awake orig, RoR2.UI.LoadoutPanelController self)
         {
@@ -173,12 +179,12 @@ namespace ScrollableLobbyUI
 
             var buttonContainer = self.GetFieldValue<RectTransform>("buttonContainerTransform");
             var rowPanel = self.GetFieldValue<RectTransform>("rowPanelTransform");
-            
+
             var rowHorizontalLayout = rowPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
 
             var panel = rowPanel.Find("Panel");
             var slotLabel = rowPanel.Find("SlotLabel");
-            
+
             var labelContainer = new GameObject();
             labelContainer.transform.SetParent(rowPanel, false);
             panel.SetParent(labelContainer.transform, false);
@@ -186,12 +192,12 @@ namespace ScrollableLobbyUI
 
             var slotLabelRect = slotLabel.GetComponent<RectTransform>();
             slotLabelRect.anchoredPosition = new Vector2(0, 0);
-            
+
             var labelContainerLayout = labelContainer.AddComponent<LayoutElement>();
             labelContainerLayout.minHeight = 0;
             labelContainerLayout.preferredHeight = 96;
             labelContainerLayout.minWidth = 128;
-            
+
             var labelContainerRect = labelContainer.GetComponent<RectTransform>();
             labelContainerRect.anchorMin = new Vector2(0, 0);
             labelContainerRect.anchorMax = new Vector2(1, 1);
@@ -315,13 +321,193 @@ namespace ScrollableLobbyUI
                 }
             });
         }
-        internal static void CharacterSelectBarControllerUpdate(On.RoR2.CharacterSelectBarController.orig_Update orig, RoR2.CharacterSelectBarController self)
-        {
-        }
+
+        internal static void CharacterSelectBarControllerUpdate(On.RoR2.CharacterSelectBarController.orig_Update orig, RoR2.CharacterSelectBarController self) { }
+        internal static void RuleBookViewerStripUpdate(On.RoR2.UI.RuleBookViewerStrip.orig_Update orig, RuleBookViewerStrip self) { }
 
         internal static void CharacterSelectBarControllerStart(On.RoR2.CharacterSelectBarController.orig_Start orig, RoR2.CharacterSelectBarController self)
         {
             self.gameObject.AddComponent<CharacterSelectBarControllerReplacement>();
+        }
+
+        internal static void RuleCategoryControllerSetData(On.RoR2.UI.RuleCategoryController.orig_SetData orig, RoR2.UI.RuleCategoryController self, RuleCategoryDef categoryDef, RuleChoiceMask availability, RuleBook ruleBook)
+        {
+            orig(self, categoryDef, availability, ruleBook);
+
+            var stripContainer = self.transform.Find("StripContainer");
+            if (!stripContainer.gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
+            var ruleStrip = stripContainer.Find("RuleStripPrefab(Clone)");
+            if (ruleStrip.GetComponent<ConstrainedScrollRect>())
+            {
+                return;
+            }
+
+            var ruleBookViewerStrip = ruleStrip.GetComponent<RuleBookViewerStrip>();
+
+            stripContainer.Find("FrameContainer").gameObject.SetActive(false);
+
+            var choiceContainer =  ruleStrip.Find("ChoiceContainer");
+            var fitter = choiceContainer.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.MinSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            var scrollRect = ruleStrip.gameObject.AddComponent<ConstrainedScrollRect>();
+            scrollRect.horizontal = true;
+            scrollRect.vertical = false;
+            scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyDrag;
+            scrollRect.content = choiceContainer.GetComponent<RectTransform>();
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+            foreach(var choiceController in ruleBookViewerStrip.choiceControllers)
+            {
+                SetupRuleButton(ruleBookViewerStrip, choiceController);
+            }
+
+            CreateFiller("LeftFiller", choiceContainer).transform.SetAsFirstSibling();
+            CreateFiller("RightFiller", choiceContainer).transform.SetAsLastSibling();
+
+            ruleBookViewerStrip.StartCoroutine(RuleScrollStartDelayCoroutine(ruleBookViewerStrip));
+        }
+
+        private static IEnumerator RuleScrollStartDelayCoroutine(RuleBookViewerStrip ruleBookViewerStrip)
+        {
+            yield return new WaitForSeconds(0.1F);
+
+            if (ruleBookViewerStrip.choiceControllers.Count == 0)
+            {
+                yield break;
+            }
+
+            var currentController = ruleBookViewerStrip.choiceControllers[Math.Min(ruleBookViewerStrip.currentDisplayChoiceIndex, ruleBookViewerStrip.choiceControllers.Count - 1)];
+            ruleBookViewerStrip.currentPosition = -currentController.transform.localPosition.x;
+            ruleBookViewerStrip.UpdatePosition();
+
+            var hgButtonHistory = GameObject.Find("RightHandPanel").GetComponentInChildren<HGButtonHistory>(true);
+            if (hgButtonHistory.lastRememberedGameObject)
+            {
+                yield break;
+            }
+
+            hgButtonHistory.lastRememberedGameObject = currentController.hgButton.gameObject;
+        }
+
+        private static GameObject CreateFiller(string name, Transform parent)
+        {
+            var filler = new GameObject(name);
+            filler.transform.SetParent(parent, false);
+            filler.transform.SetAsFirstSibling();
+
+            var rectTransform = filler.AddComponent<RectTransform>();
+            rectTransform.sizeDelta = new Vector2(ruleFillerWidth, ruleFillerHeight);
+
+            var leftLayout = filler.AddComponent<LayoutElement>();
+            leftLayout.minWidth = ruleFillerWidth;
+            leftLayout.minHeight = ruleFillerHeight;
+
+            return filler;
+        }
+
+        private static void SetupRuleButton(RuleBookViewerStrip ruleBookViewerStrip, RuleChoiceController choiceController)
+        {
+            choiceController.hgButton.onClick.AddListener(OnClick);
+            choiceController.hgButton.onSelect.AddListener(OnSelect);
+
+            foreach (var refreshOrder in choiceController.GetComponentsInChildren<RefreshCanvasDrawOrder>(true))
+            {
+                refreshOrder.enabled = false;
+                refreshOrder.canvas.overrideSorting = false;
+            }
+
+            void OnClick()
+            {
+                if (!choiceController.canVote)
+                {
+                    return;
+                }
+                choiceController.StartCoroutine(RuleScrollCoroutine(ruleBookViewerStrip, choiceController));
+            }
+
+            void OnSelect()
+            {
+                var eventSystemLocator = choiceController.hgButton.eventSystemLocator;
+
+                if (!eventSystemLocator || !eventSystemLocator.eventSystem || eventSystemLocator.eventSystem.currentInputSource != RoR2.UI.MPEventSystem.InputSource.Gamepad)
+                {
+                    return;
+                }
+
+                choiceController.StartCoroutine(RuleScrollCoroutine(ruleBookViewerStrip, choiceController));
+            }
+        }
+
+        private static IEnumerator RuleScrollCoroutine(RuleBookViewerStrip ruleBookViewerStrip, RuleChoiceController choiceController)
+        {
+            var localTime = 0F;
+            var velocity = 0F;
+            var endPosition = -choiceController.transform.localPosition.x;
+
+            ruleBookViewerStrip.currentPosition = ruleBookViewerStrip.choiceContainer.transform.localPosition.x;
+            
+            while (localTime < ruleScrollDuration)
+            {
+                ruleBookViewerStrip.currentPosition = Mathf.SmoothDamp(ruleBookViewerStrip.currentPosition, endPosition, ref velocity, ruleScrollDuration);
+                ruleBookViewerStrip.UpdatePosition();
+
+                yield return new WaitForEndOfFrame();
+                localTime += Time.deltaTime;
+            }
+
+            ruleBookViewerStrip.currentPosition = endPosition;
+            ruleBookViewerStrip.UpdatePosition();
+        }
+
+        internal static void RuleBookViewerAwake(On.RoR2.UI.RuleBookViewer.orig_Awake orig, RuleBookViewer self)
+        {
+            var ruleChoicePrefab = self.transform.Find("RuleChoicePrefab");
+
+            var selectedHighlight = GameObject.Instantiate(ruleChoicePrefab.transform.Find("ButtonSelectionHighlight, Checkbox"), ruleChoicePrefab, false);
+            selectedHighlight.name = "ButtonSelectionHighlight, Selected";
+
+            var highlight = selectedHighlight.Find("Highlight");
+            highlight.GetComponent<Image>().color = Color.green;
+            
+            var highlightRect = highlight.GetComponent<RectTransform>();
+            highlightRect.offsetMin = new Vector2();
+            highlightRect.offsetMax = new Vector2();
+
+            selectedHighlight.Find("Checkbox").gameObject.SetActive(false);
+
+            orig(self);
+        }
+
+        internal static void RuleBookViewerStripSetData(On.RoR2.UI.RuleBookViewerStrip.orig_SetData orig, RuleBookViewerStrip self, List<RuleChoiceDef> newChoices, int choiceIndex)
+        {
+            var oldDisplayChoiceIndex = self.currentDisplayChoiceIndex;
+
+            orig(self, newChoices, choiceIndex);
+
+            if (self.currentDisplayChoiceIndex == oldDisplayChoiceIndex)
+            {
+                return;
+            }
+
+            RuleSelectedHighlightUpdate(self.choiceControllers[oldDisplayChoiceIndex], false);
+            RuleSelectedHighlightUpdate(self.choiceControllers[self.currentDisplayChoiceIndex], true);
+        }
+
+        private static void RuleSelectedHighlightUpdate(RuleChoiceController choiceController, bool active)
+        {
+            var selectedHighlight = choiceController.transform.Find("ButtonSelectionHighlight, Selected");
+            if (!selectedHighlight)
+            {
+                return;
+            }
+
+            selectedHighlight.gameObject.SetActive(active);
         }
     }
 }

@@ -1,13 +1,17 @@
 ﻿using BepInEx;
 using R2API;
 using R2API.Utils;
+using System.Security;
+using System.Security.Permissions;
 
+[module: UnverifiableCode]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace ScrollableLobbyUI
 {
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [R2APISubmoduleDependency(nameof(PrefabAPI))]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.3.3")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.4.0")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {
@@ -24,6 +28,11 @@ namespace ScrollableLobbyUI
 
             On.RoR2.CharacterSelectBarController.Start += UIHooks.CharacterSelectBarControllerStart;
             On.RoR2.CharacterSelectBarController.Update += UIHooks.CharacterSelectBarControllerUpdate;
+
+            On.RoR2.UI.RuleBookViewer.Awake += UIHooks.RuleBookViewerAwake;
+            On.RoR2.UI.RuleCategoryController.SetData += UIHooks.RuleCategoryControllerSetData;
+            On.RoR2.UI.RuleBookViewerStrip.Update += UIHooks.RuleBookViewerStripUpdate;
+            On.RoR2.UI.RuleBookViewerStrip.SetData += UIHooks.RuleBookViewerStripSetData;
         }
     }
 }
