@@ -24,6 +24,10 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 ***
 # Changelog
 
+**1.4.1**
+
+* Added support for `FloodWarning`.
+
 **1.4.0**
 
 * Added better scrolling to difficulty selection.

@@ -340,7 +340,20 @@ namespace ScrollableLobbyUI
                 return;
             }
 
-            var ruleStrip = stripContainer.Find("RuleStripPrefab(Clone)");
+            stripContainer.Find("FrameContainer").gameObject.SetActive(false);
+
+            for (var i = 0; i < stripContainer.childCount; i++)
+            {
+                var child = stripContainer.GetChild(i);
+                if (child.gameObject.activeSelf)
+                {
+                    SetupStripPrefab(child);
+                }
+            }
+        }
+
+        private static void SetupStripPrefab(Transform ruleStrip)
+        {
             if (ruleStrip.GetComponent<ConstrainedScrollRect>())
             {
                 return;
@@ -348,9 +361,7 @@ namespace ScrollableLobbyUI
 
             var ruleBookViewerStrip = ruleStrip.GetComponent<RuleBookViewerStrip>();
 
-            stripContainer.Find("FrameContainer").gameObject.SetActive(false);
-
-            var choiceContainer =  ruleStrip.Find("ChoiceContainer");
+            var choiceContainer = ruleStrip.Find("ChoiceContainer");
             var fitter = choiceContainer.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.MinSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
@@ -362,7 +373,7 @@ namespace ScrollableLobbyUI
             scrollRect.content = choiceContainer.GetComponent<RectTransform>();
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
-            foreach(var choiceController in ruleBookViewerStrip.choiceControllers)
+            foreach (var choiceController in ruleBookViewerStrip.choiceControllers)
             {
                 SetupRuleButton(ruleBookViewerStrip, choiceController);
             }
