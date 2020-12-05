@@ -23,6 +23,9 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 ***
 # Changelog
+**1.4.2**
+
+* Added `SurvivorBlacklist` in `CharacterSelectBarControllerReplacement` if mod developers want to exclude some survivors from list
 
 **1.4.1**
 

@@ -16,6 +16,8 @@ namespace ScrollableLobbyUI
     [RequireComponent(typeof(CharacterSelectBarController))]
     public class CharacterSelectBarControllerReplacement : MonoBehaviour
     {
+        public static HashSet<SurvivorIndex> SurvivorBlacklist { get; } = new HashSet<SurvivorIndex>();
+
         public GameObject choiceButtonPrefab;
         public GameObject fillButtonPrefab;
         public RectTransform iconContainer;
@@ -54,7 +56,7 @@ namespace ScrollableLobbyUI
         {
             if (!isEclipseRun)
             {
-                return survivorDef != null;
+                return survivorDef != null && !SurvivorBlacklist.Contains(survivorDef.survivorIndex);
             }
 
             return (SurvivorIndex)EclipseRun.cvEclipseSurvivorIndex.value == survivorDef.survivorIndex;
