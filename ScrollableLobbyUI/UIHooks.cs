@@ -1,5 +1,4 @@
-﻿using IL.RoR2.Achievements;
-using Mono.Cecil.Cil;
+﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using R2API.Utils;
 using RoR2;
@@ -7,8 +6,8 @@ using RoR2.UI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,23 +35,13 @@ namespace ScrollableLobbyUI
             loadoutHelper.loadoutPanel = self;
 
             //Adding container on top of LoadoutPanelController
-            AddScrollPanel(self.transform, "LoadoutScrollPanel");
+            var loadoutScrollPanel = AddScrollPanel(self.transform, "LoadoutScrollPanel");
             //Adding container on top of SkillPanel
             var skillScrollPanel = AddScrollPanel(self.transform.parent.parent.Find("SkillPanel"), "SkillsScrollPanel");
 
             //Moving out descriptionPanel, so it will not be hidden by mask
-            var descriptionPanel = skillScrollPanel.transform.GetChild(0).Find("DescriptionPanel, Skill");
-
-            var skillScrollContainer = new GameObject("SkillScrollContainer");
-            skillScrollContainer.transform.SetParent(skillScrollPanel.transform.parent, false);
-            skillScrollPanel.transform.SetParent(skillScrollContainer.transform, false);
-            descriptionPanel.SetParent(skillScrollContainer.transform, false);
-
-            var rect = skillScrollContainer.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0, 0);
-            rect.anchorMax = new Vector2(1, 1);
-            rect.pivot = new Vector2(0.5F, 1);
-            rect.sizeDelta = new Vector2(0, 0);
+            MoveUpDescription("DescriptionPanel, Loadout", "LoadoutScrollContainer", loadoutScrollPanel);
+            MoveUpDescription("DescriptionPanel, Skill", "SkillScrollContainer", skillScrollPanel);
 
             GameObject AddScrollPanel(Transform panel, string name)
             {
@@ -96,6 +85,25 @@ namespace ScrollableLobbyUI
                 panelImage.raycastTarget = true;
 
                 return scrollPanel;
+            }
+
+            void MoveUpDescription(string descriptionPanelName, string parentName, GameObject panel)
+            {
+                var descriptionPanel = panel.transform.GetChild(0).Find(descriptionPanelName);
+
+                var parentScrollContainer = new GameObject(parentName);
+                parentScrollContainer.transform.SetParent(panel.transform.parent, false);
+                panel.transform.SetParent(parentScrollContainer.transform, false);
+                descriptionPanel.SetParent(parentScrollContainer.transform, false);
+
+                var rect = parentScrollContainer.AddComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0, 0);
+                rect.anchorMax = new Vector2(1, 1);
+                rect.pivot = new Vector2(0.5F, 1);
+                rect.sizeDelta = new Vector2(0, 0);
+
+                var clearTextOnDisable = panel.transform.GetChild(0).gameObject.AddComponent<ClearTextOnDisable>();
+                clearTextOnDisable.textObjects = new List<TextMeshProUGUI> { descriptionPanel.GetComponent<DisableIfTextIsEmpty>().tmpUGUI };
             }
         }
 

@@ -23,6 +23,10 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 ***
 # Changelog
+**1.4.3**
+
+* Fixed an issue where you couldn't look at skill description when using a gamepad.
+
 **1.4.2**
 
 * Added `SurvivorBlacklist` in `CharacterSelectBarControllerReplacement` if mod developers want to exclude some survivors from list
