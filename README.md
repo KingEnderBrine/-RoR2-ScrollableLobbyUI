@@ -7,8 +7,8 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 * `Character select` - there are now buttons in character select so you can change page with surviors.
 * `Skills` - scroll mouse wheel to move up/down.
 * `Loadout` - scroll mouse wheel to move up/down.
-* `Loadout rows` - drag icons left/right to scroll individual rows in loadout.
-* `Difficulty` - same as `Loadout rows`
+* `Loadout rows` - drag icons left/right to scroll individual rows in loadout or use arrows on the sides of a row.
+* `Difficulty` - drag icons left/right to scroll
 
 #### Gamepad
 
@@ -16,13 +16,17 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 * `Skills` - when you select row that out of panel it will be scrolled to that row.
 * `Loadout` - when you select icon that out of panel it will be scrolled to that icon.
 * `Loadout rows` - when you select icon that out of panel it will be scrolled to that icon.
-* `Difficulty` - same as `Loadout rows`
+* `Difficulty` - when you select icon that out of panel it will be scrolled to that icon.
 
 # Bugs
 Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 ***
 # Changelog
+**1.5.0**
+
+* Added arrows to loadout rows that can be used istead of dragging.
+
 **1.4.3**
 
 * Fixed an issue where you couldn't look at skill description when using a gamepad.

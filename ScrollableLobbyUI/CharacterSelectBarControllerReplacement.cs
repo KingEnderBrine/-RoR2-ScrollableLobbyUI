@@ -106,7 +106,7 @@ namespace ScrollableLobbyUI
                 {
                     buttonComponent.hoverToken = survivorDescription;
                 }
-                element.SetFieldValue("shouldRebuild", true);
+                element.shouldRebuild = true;
             }
 
             for (var index = 0; index < fillerCount; index++)
@@ -241,8 +241,8 @@ namespace ScrollableLobbyUI
                 var buttonContainerLayout = buttonContainer.AddComponent<LayoutElement>();
                 buttonContainerLayout.preferredHeight = 156;
 
-                var button = Resources.Load<GameObject>($"prefabs/ui/controls/buttons/{buttonPrefix}Button").InstantiateClone($"{prefix}Page");
-                button.transform.SetParent(buttonContainer.transform, false);
+                var button = GameObject.Instantiate(Resources.Load<GameObject>($"prefabs/ui/controls/buttons/{buttonPrefix}Button"), buttonContainer.transform, false);
+                button.name = $"{prefix}Page";
                 button.layer = 5;
 
                 var buttonComponent = button.GetComponent<HGButton>();

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace ScrollableLobbyUI
@@ -113,13 +114,16 @@ namespace ScrollableLobbyUI
             buttonsWithListeners.Clear();
         }
 
-        internal static void LoadoutPanelControllerRowFinishSetup(On.RoR2.UI.LoadoutPanelController.Row.orig_FinishSetup orig, object self, bool addWIPIcons)
+        internal static void LoadoutPanelControllerRowFinishSetup(On.RoR2.UI.LoadoutPanelController.Row.orig_FinishSetup orig, object selfObject, bool addWIPIcons)
         {
+            var self = selfObject as LoadoutPanelController.Row;
+
             orig(self, addWIPIcons);
 
-            var rowRectTransform = self.GetFieldValue<RectTransform>("rowPanelTransform");
-            var buttonContainerTransform = self.GetFieldValue<RectTransform>("buttonContainerTransform");
-            foreach (var button in buttonContainerTransform.GetComponentsInChildren<RoR2.UI.HGButton>())
+            var rowRectTransform = self.rowPanelTransform;
+            var buttonContainerTransform = self.buttonContainerTransform;
+
+            foreach (var button in self.buttons)
             {
                 //Scroll to selected row if it's not fully visible
                 button.onSelect.AddListener(() =>
@@ -176,24 +180,26 @@ namespace ScrollableLobbyUI
             }
         }
 
-        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object self, RoR2.UI.LoadoutPanelController owner, int bodyIndex, string titleToken)
+        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object selfObject, RoR2.UI.LoadoutPanelController owner, int bodyIndex, string titleToken)
         {
+            var self = selfObject as LoadoutPanelController.Row;
+            
             orig(self, owner, bodyIndex, titleToken);
 
             //Disabling sorting override because it not work with mask
-            var highlightRect = self.GetFieldValue<RectTransform>("choiceHighlightRect");
+            var highlightRect = self.choiceHighlightRect;
             highlightRect.GetComponent<RefreshCanvasDrawOrder>().enabled = false;
             highlightRect.GetComponent<Canvas>().overrideSorting = false;
 
-            var buttonContainer = self.GetFieldValue<RectTransform>("buttonContainerTransform");
-            var rowPanel = self.GetFieldValue<RectTransform>("rowPanelTransform");
+            var buttonContainer = self.buttonContainerTransform;
+            var rowPanel = self.rowPanelTransform;
 
             var rowHorizontalLayout = rowPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
 
             var panel = rowPanel.Find("Panel");
             var slotLabel = rowPanel.Find("SlotLabel");
 
-            var labelContainer = new GameObject();
+            var labelContainer = new GameObject("LabelContainer");
             labelContainer.transform.SetParent(rowPanel, false);
             panel.SetParent(labelContainer.transform, false);
             slotLabel.SetParent(labelContainer.transform, false);
@@ -211,11 +217,20 @@ namespace ScrollableLobbyUI
             labelContainerRect.anchorMax = new Vector2(1, 1);
             labelContainerRect.pivot = new Vector2(0, 0F);
 
-            var scrollPanel = new GameObject();
+            var scrollPanel = new GameObject("RowScrollPanel");
             scrollPanel.transform.SetParent(rowPanel, false);
 
-            buttonContainer.SetParent(scrollPanel.transform, false);
-            highlightRect.SetParent(scrollPanel.transform, false);
+            var scrollViewport = new GameObject("Viewport");
+            scrollViewport.transform.SetParent(scrollPanel.transform, false);
+
+            var scrollViewportRectTransform = scrollViewport.AddComponent<RectTransform>();
+            scrollViewportRectTransform.pivot = new Vector2(0.5F, 0.5F);
+            scrollViewportRectTransform.anchorMin = new Vector2(0, 0);
+            scrollViewportRectTransform.anchorMax = new Vector2(1, 1);
+            scrollViewportRectTransform.sizeDelta = new Vector2(0, 0);
+
+            buttonContainer.SetParent(scrollViewport.transform, false);
+            highlightRect.SetParent(scrollViewport.transform, false);
 
             var mask = scrollPanel.AddComponent<RectMask2D>();
 
@@ -225,6 +240,7 @@ namespace ScrollableLobbyUI
             var scrollRect = scrollPanel.AddComponent<ConstrainedScrollRect>();
             scrollRect.horizontal = true;
             scrollRect.vertical = false;
+            scrollRect.viewport = scrollViewportRectTransform;
             scrollRect.content = buttonContainer;
             scrollRect.scrollSensitivity = -30;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
@@ -247,6 +263,56 @@ namespace ScrollableLobbyUI
 
             var buttonContainerHorizontalLayout = buttonContainer.GetComponent<HorizontalLayoutGroup>();
             buttonContainerHorizontalLayout.padding = new RectOffset(8, 8, 8, 8);
+
+            var rightButton = SetupButton("Right", scrollPanelRectTransform, MoveDirection.Right, 1);
+            var leftButton = SetupButton("Left", scrollPanelRectTransform, MoveDirection.Left, 0);
+
+            var scrollButtonsController = scrollPanel.AddComponent<ScrollButtonsController>();
+            scrollButtonsController.left = leftButton;
+            scrollButtonsController.right = rightButton;
+
+            GameObject SetupButton(string buttonPrefix, Transform parent, MoveDirection moveDirection, float xNormalized)
+            {
+                var scrollButton = GameObject.Instantiate(Resources.Load<GameObject>($"prefabs/ui/controls/buttons/{buttonPrefix}Button"), parent, false);
+                scrollButton.name = $"{buttonPrefix}ScrollButton";
+                scrollButton.layer = 5;
+
+                var hgButton = scrollButton.GetComponent<HGButton>();
+
+                var arrowObject = new GameObject("Arrow");
+                arrowObject.transform.SetParent(scrollButton.transform, false);
+
+                var arrowObjectRectTransform = arrowObject.AddComponent<RectTransform>();
+                arrowObjectRectTransform.pivot = new Vector2(0.5F, 0.5F);
+                arrowObjectRectTransform.anchorMin = new Vector2(0, 0);
+                arrowObjectRectTransform.anchorMax = new Vector2(1, 1);
+                arrowObjectRectTransform.sizeDelta = new Vector2(-8, 0);
+
+                var targetGraphic = hgButton.targetGraphic as Image;
+
+                var arrowImage = arrowObject.AddComponent<Image>();
+                arrowImage.sprite = targetGraphic.sprite;
+
+                targetGraphic.sprite = null;
+                targetGraphic.color = Color.black;
+
+                hgButton.targetGraphic = arrowImage;
+
+                var scrollOnPress = scrollButton.AddComponent<ContinuousScrollOnPress>();
+                scrollOnPress.scrollRect = scrollRect;
+                scrollOnPress.sensitivity = -400;
+                scrollOnPress.moveDirection = moveDirection;
+
+                GameObject.DestroyImmediate(scrollButton.GetComponent<LayoutElement>());
+
+                var rectTransform = scrollButton.GetComponent<RectTransform>();
+                rectTransform.anchorMin = new Vector2(xNormalized, 0F);
+                rectTransform.anchorMax = new Vector2(xNormalized, 1F);
+                rectTransform.pivot = new Vector2(xNormalized, 0.5F);
+                rectTransform.sizeDelta = new Vector2(24, 0);
+
+                return scrollButton;
+            }
         }
 
         internal static void CharacterSelectControllerRebuildLocal(ILContext il)
@@ -273,7 +339,7 @@ namespace ScrollableLobbyUI
                 c.Emit(instuction.OpCode, instuction.Operand);
             }
 
-            var fieldInfo = typeof(RoR2.UI.CharacterSelectController).GetNestedType("StripDisplayData", BindingFlags.NonPublic).GetField("enabled");
+            var fieldInfo = typeof(RoR2.UI.CharacterSelectController.StripDisplayData).GetField("enabled");
             c.Emit(OpCodes.Ldfld, fieldInfo);
             c.EmitDelegate<Action<RectTransform, bool>>((skillStrip, enabled) =>
             {
