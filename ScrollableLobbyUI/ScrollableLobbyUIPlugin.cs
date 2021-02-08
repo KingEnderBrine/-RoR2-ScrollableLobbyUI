@@ -11,7 +11,7 @@ namespace ScrollableLobbyUI
     [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
     [R2APISubmoduleDependency(nameof(PrefabAPI))]
     [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.5.0")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.5.1")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {
@@ -19,6 +19,7 @@ namespace ScrollableLobbyUI
         {
             //Edditing skills overview UI to prevent auto resizing and add scrolling
             IL.RoR2.UI.CharacterSelectController.RebuildLocal += UIHooks.CharacterSelectControllerRebuildLocal;
+            On.RoR2.UI.CharacterSelectController.Awake += UIHooks.CharacterSelectControllerRebuildAwake;
 
             //Edditing lobby UI to add scrolling for skill and loadout
             On.RoR2.UI.LoadoutPanelController.Awake += UIHooks.LoadoutPanelControllerAwake;

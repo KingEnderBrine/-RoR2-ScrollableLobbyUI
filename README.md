@@ -23,6 +23,10 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 ***
 # Changelog
+**1.5.1**
+
+* Changed row arrows background. Now it's a blured out scene (like whole loadout panel) instead of black color.
+
 **1.5.0**
 
 * Added arrows to loadout rows that can be used istead of dragging.

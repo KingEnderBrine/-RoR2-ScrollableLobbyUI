@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using LeTai.Asset.TranslucentImage;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using R2API.Utils;
 using RoR2;
@@ -22,6 +23,7 @@ namespace ScrollableLobbyUI
         private const float ruleScrollDuration = 0.1F;
 
         private static readonly List<RoR2.UI.HGButton> buttonsWithListeners = new List<RoR2.UI.HGButton>();
+        private static Material defaultTranslucentMaterial;
 
         internal static void LoadoutPanelControllerAwake(On.RoR2.UI.LoadoutPanelController.orig_Awake orig, RoR2.UI.LoadoutPanelController self)
         {
@@ -104,8 +106,19 @@ namespace ScrollableLobbyUI
                 rect.sizeDelta = new Vector2(0, 0);
 
                 var clearTextOnDisable = panel.transform.GetChild(0).gameObject.AddComponent<ClearTextOnDisable>();
-                clearTextOnDisable.textObjects = new List<TextMeshProUGUI> { descriptionPanel.GetComponent<DisableIfTextIsEmpty>().tmpUGUI };
+                clearTextOnDisable.textObjects = new List<TextMeshProUGUI> { descriptionPanel.GetComponent<RoR2.UI.DisableIfTextIsEmpty>().tmpUGUI };
             }
+        }
+
+        internal static void CharacterSelectControllerRebuildAwake(On.RoR2.UI.CharacterSelectController.orig_Awake orig, RoR2.UI.CharacterSelectController self)
+        {
+            orig(self);
+
+            if (defaultTranslucentMaterial)
+            {
+                return;
+            }
+            defaultTranslucentMaterial = GameObject.Instantiate(self.transform.Find("SafeArea/LeftHandPanel (Layer: Main)/BlurPanel").GetComponent<TranslucentImage>().material);
         }
 
         internal static void LoadoutPanelControllerOnDestroy(On.RoR2.UI.LoadoutPanelController.orig_OnDestroy orig, RoR2.UI.LoadoutPanelController self)
@@ -116,7 +129,7 @@ namespace ScrollableLobbyUI
 
         internal static void LoadoutPanelControllerRowFinishSetup(On.RoR2.UI.LoadoutPanelController.Row.orig_FinishSetup orig, object selfObject, bool addWIPIcons)
         {
-            var self = selfObject as LoadoutPanelController.Row;
+            var self = selfObject as RoR2.UI.LoadoutPanelController.Row;
 
             orig(self, addWIPIcons);
 
@@ -182,7 +195,7 @@ namespace ScrollableLobbyUI
 
         internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object selfObject, RoR2.UI.LoadoutPanelController owner, int bodyIndex, string titleToken)
         {
-            var self = selfObject as LoadoutPanelController.Row;
+            var self = selfObject as RoR2.UI.LoadoutPanelController.Row;
             
             orig(self, owner, bodyIndex, titleToken);
 
@@ -277,7 +290,8 @@ namespace ScrollableLobbyUI
                 scrollButton.name = $"{buttonPrefix}ScrollButton";
                 scrollButton.layer = 5;
 
-                var hgButton = scrollButton.GetComponent<HGButton>();
+
+                var hgButton = scrollButton.GetComponent<RoR2.UI.HGButton>();
 
                 var arrowObject = new GameObject("Arrow");
                 arrowObject.transform.SetParent(scrollButton.transform, false);
@@ -289,12 +303,14 @@ namespace ScrollableLobbyUI
                 arrowObjectRectTransform.sizeDelta = new Vector2(-8, 0);
 
                 var targetGraphic = hgButton.targetGraphic as Image;
-
+                
                 var arrowImage = arrowObject.AddComponent<Image>();
                 arrowImage.sprite = targetGraphic.sprite;
-
-                targetGraphic.sprite = null;
-                targetGraphic.color = Color.black;
+                
+                GameObject.DestroyImmediate(hgButton.targetGraphic);
+                var translucentImage = scrollButton.AddComponent<TranslucentImage>();
+                translucentImage.material = defaultTranslucentMaterial;
+                translucentImage.color = Color.black;
 
                 hgButton.targetGraphic = arrowImage;
 
@@ -310,6 +326,8 @@ namespace ScrollableLobbyUI
                 rectTransform.anchorMax = new Vector2(xNormalized, 1F);
                 rectTransform.pivot = new Vector2(xNormalized, 0.5F);
                 rectTransform.sizeDelta = new Vector2(24, 0);
+
+                scrollButton.SetActive(false);
 
                 return scrollButton;
             }
@@ -397,7 +415,7 @@ namespace ScrollableLobbyUI
         }
 
         internal static void CharacterSelectBarControllerUpdate(On.RoR2.CharacterSelectBarController.orig_Update orig, RoR2.CharacterSelectBarController self) { }
-        internal static void RuleBookViewerStripUpdate(On.RoR2.UI.RuleBookViewerStrip.orig_Update orig, RuleBookViewerStrip self) { }
+        internal static void RuleBookViewerStripUpdate(On.RoR2.UI.RuleBookViewerStrip.orig_Update orig, RoR2.UI.RuleBookViewerStrip self) { }
 
         internal static void CharacterSelectBarControllerStart(On.RoR2.CharacterSelectBarController.orig_Start orig, RoR2.CharacterSelectBarController self)
         {
@@ -433,7 +451,7 @@ namespace ScrollableLobbyUI
                 return;
             }
 
-            var ruleBookViewerStrip = ruleStrip.GetComponent<RuleBookViewerStrip>();
+            var ruleBookViewerStrip = ruleStrip.GetComponent<RoR2.UI.RuleBookViewerStrip>();
 
             var choiceContainer = ruleStrip.Find("ChoiceContainer");
             var fitter = choiceContainer.gameObject.AddComponent<ContentSizeFitter>();
@@ -458,7 +476,7 @@ namespace ScrollableLobbyUI
             ruleBookViewerStrip.StartCoroutine(RuleScrollStartDelayCoroutine(ruleBookViewerStrip));
         }
 
-        private static IEnumerator RuleScrollStartDelayCoroutine(RuleBookViewerStrip ruleBookViewerStrip)
+        private static IEnumerator RuleScrollStartDelayCoroutine(RoR2.UI.RuleBookViewerStrip ruleBookViewerStrip)
         {
             yield return new WaitForSeconds(0.1F);
 
@@ -471,7 +489,7 @@ namespace ScrollableLobbyUI
             ruleBookViewerStrip.currentPosition = -currentController.transform.localPosition.x;
             ruleBookViewerStrip.UpdatePosition();
 
-            var hgButtonHistory = GameObject.Find("RightHandPanel").GetComponentInChildren<HGButtonHistory>(true);
+            var hgButtonHistory = GameObject.Find("RightHandPanel").GetComponentInChildren<RoR2.UI.HGButtonHistory>(true);
             if (hgButtonHistory.lastRememberedGameObject)
             {
                 yield break;
@@ -496,7 +514,7 @@ namespace ScrollableLobbyUI
             return filler;
         }
 
-        private static void SetupRuleButton(RuleBookViewerStrip ruleBookViewerStrip, RuleChoiceController choiceController)
+        private static void SetupRuleButton(RoR2.UI.RuleBookViewerStrip ruleBookViewerStrip, RoR2.UI.RuleChoiceController choiceController)
         {
             choiceController.hgButton.onClick.AddListener(OnClick);
             choiceController.hgButton.onSelect.AddListener(OnSelect);
@@ -529,7 +547,7 @@ namespace ScrollableLobbyUI
             }
         }
 
-        private static IEnumerator RuleScrollCoroutine(RuleBookViewerStrip ruleBookViewerStrip, RuleChoiceController choiceController)
+        private static IEnumerator RuleScrollCoroutine(RoR2.UI.RuleBookViewerStrip ruleBookViewerStrip, RoR2.UI.RuleChoiceController choiceController)
         {
             var localTime = 0F;
             var velocity = 0F;
@@ -550,7 +568,7 @@ namespace ScrollableLobbyUI
             ruleBookViewerStrip.UpdatePosition();
         }
 
-        internal static void RuleBookViewerAwake(On.RoR2.UI.RuleBookViewer.orig_Awake orig, RuleBookViewer self)
+        internal static void RuleBookViewerAwake(On.RoR2.UI.RuleBookViewer.orig_Awake orig, RoR2.UI.RuleBookViewer self)
         {
             var ruleChoicePrefab = self.transform.Find("RuleChoicePrefab");
 
@@ -569,7 +587,7 @@ namespace ScrollableLobbyUI
             orig(self);
         }
 
-        internal static void RuleBookViewerStripSetData(On.RoR2.UI.RuleBookViewerStrip.orig_SetData orig, RuleBookViewerStrip self, List<RuleChoiceDef> newChoices, int choiceIndex)
+        internal static void RuleBookViewerStripSetData(On.RoR2.UI.RuleBookViewerStrip.orig_SetData orig, RoR2.UI.RuleBookViewerStrip self, List<RuleChoiceDef> newChoices, int choiceIndex)
         {
             var oldDisplayChoiceIndex = self.currentDisplayChoiceIndex;
 
@@ -584,7 +602,7 @@ namespace ScrollableLobbyUI
             RuleSelectedHighlightUpdate(self.choiceControllers[self.currentDisplayChoiceIndex], true);
         }
 
-        private static void RuleSelectedHighlightUpdate(RuleChoiceController choiceController, bool active)
+        private static void RuleSelectedHighlightUpdate(RoR2.UI.RuleChoiceController choiceController, bool active)
         {
             var selectedHighlight = choiceController.transform.Find("ButtonSelectionHighlight, Selected");
             if (!selectedHighlight)
