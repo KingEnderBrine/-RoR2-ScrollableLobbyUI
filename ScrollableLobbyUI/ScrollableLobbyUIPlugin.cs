@@ -1,17 +1,14 @@
 ﻿using BepInEx;
-using R2API;
-using R2API.Utils;
 using System.Security;
 using System.Security.Permissions;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+[assembly: R2API.Utils.ManualNetworkRegistration]
+[assembly: EnigmaticThunder.Util.ManualNetworkRegistration]
 namespace ScrollableLobbyUI
 {
-    [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
-    [R2APISubmoduleDependency(nameof(PrefabAPI))]
-    [BepInDependency("com.bepis.r2api")]
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.5.1")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.6.0")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {

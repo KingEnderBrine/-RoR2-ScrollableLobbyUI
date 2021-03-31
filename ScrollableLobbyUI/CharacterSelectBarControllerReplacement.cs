@@ -1,6 +1,4 @@
-﻿using R2API;
-using R2API.Utils;
-using RoR2;
+﻿using RoR2;
 using RoR2.UI;
 using System;
 using System.Collections;
@@ -16,8 +14,6 @@ namespace ScrollableLobbyUI
     [RequireComponent(typeof(CharacterSelectBarController))]
     public class CharacterSelectBarControllerReplacement : MonoBehaviour
     {
-        public static HashSet<SurvivorIndex> SurvivorBlacklist { get; } = new HashSet<SurvivorIndex>();
-
         public GameObject choiceButtonPrefab;
         public GameObject fillButtonPrefab;
         public RectTransform iconContainer;
@@ -56,7 +52,7 @@ namespace ScrollableLobbyUI
         {
             if (!isEclipseRun)
             {
-                return survivorDef != null && !SurvivorBlacklist.Contains(survivorDef.survivorIndex);
+                return survivorDef != null && !survivorDef.hidden;
             }
 
             return (SurvivorIndex)EclipseRun.cvEclipseSurvivorIndex.value == survivorDef.survivorIndex;
@@ -138,12 +134,11 @@ namespace ScrollableLobbyUI
 
         private void GatherSurvivorsInfo()
         {
-            for (int index = 0; index < SurvivorCatalog.idealSurvivorOrder.Length; ++index)
+            foreach (var survivorDef in SurvivorCatalog.orderedSurvivorDefs)
             {
-                SurvivorIndex survivorIndex = SurvivorCatalog.idealSurvivorOrder[index];
-                if (ShouldDisplaySurvivor(SurvivorCatalog.GetSurvivorDef(survivorIndex)))
+                if (ShouldDisplaySurvivor(survivorDef))
                 {
-                    survivorIndexList.Add(survivorIndex);
+                    survivorIndexList.Add(survivorDef.survivorIndex);
                 }
             }
 
@@ -291,7 +286,7 @@ namespace ScrollableLobbyUI
                 inputBindingDisplayController.axisRange = Rewired.AxisRange.Full;
                 inputBindingDisplayController.useExplicitInputSource = true;
                 inputBindingDisplayController.explicitInputSource = MPEventSystem.InputSource.Gamepad;
-                inputBindingDisplayController.InvokeMethod("Awake");
+                inputBindingDisplayController.Awake();
 
 
                 var glyphTextLayout = glyphText.AddComponent<LayoutElement>();
@@ -304,7 +299,6 @@ namespace ScrollableLobbyUI
                 hgTextMeshPro.text = $"<sprite=\"tmpsprXboxOneGlyphs\" name=\"texXBoxOneGlyphs_{glyphIndex}\">";
                 hgTextMeshPro.UpdateFontAsset();
                 hgTextMeshPro.fontSize = 24;
-                hgTextMeshPro.SetFieldValue("m_fontSizeBase", 16F);
                 hgTextMeshPro.fontSizeMin = 18;
                 hgTextMeshPro.fontSizeMax = 72;
                 hgTextMeshPro.fontWeight = FontWeight.Regular;
@@ -315,7 +309,6 @@ namespace ScrollableLobbyUI
                 hgTextMeshPro.richText = true;
                 hgTextMeshPro.parseCtrlCharacters = true;
                 hgTextMeshPro.isOrthographic = true;
-
 
                 var glyphTMP = new GameObject("TMP SubMeshUI");
                 glyphTMP.transform.SetParent(glyphText.transform);
@@ -335,7 +328,7 @@ namespace ScrollableLobbyUI
                 var glyphTMPSubMesh = glyphTMP.AddComponent<TMP_SubMeshUI>();
                 glyphTMPSubMesh.fontAsset = tmpBombDropShadows;
                 glyphTMPSubMesh.spriteAsset = Resources.Load<TMP_SpriteAsset>("sprite assets/tmpsprXboxOneGlyphs.asset");
-                glyphTMPSubMesh.SetFieldValue("m_TextComponent", hgTextMeshPro);
+                typeof(TMP_SubMeshUI).GetField("m_TextComponent", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(glyphTMPSubMesh, hgTextMeshPro);
 
                 var pageEvent = survivorChoiseGrid.AddComponent<HGGamepadInputEvent>();
                 pageEvent.requiredTopLayer = uiLayerKey;

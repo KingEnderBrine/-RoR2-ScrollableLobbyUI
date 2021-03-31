@@ -1,13 +1,11 @@
 ﻿using LeTai.Asset.TranslucentImage;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using R2API.Utils;
 using RoR2;
 using RoR2.UI;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -193,7 +191,7 @@ namespace ScrollableLobbyUI
             }
         }
 
-        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object selfObject, RoR2.UI.LoadoutPanelController owner, int bodyIndex, string titleToken)
+        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object selfObject, RoR2.UI.LoadoutPanelController owner, BodyIndex bodyIndex, string titleToken)
         {
             var self = selfObject as RoR2.UI.LoadoutPanelController.Row;
             
@@ -338,12 +336,10 @@ namespace ScrollableLobbyUI
             var c = new ILCursor(il);
 
             c.GotoNext(
-                x => x.MatchLdcI4(0),
-                x => x.MatchStloc(26),
-                x => x.MatchBr(out var label),
                 x => x.MatchLdarg(0),
-                x => x.MatchLdarg(0));
-            c.Index += 4;
+                x => x.MatchLdfld<CharacterSelectController>(nameof(CharacterSelectController.skillStripAllocator)),
+                x => x.MatchLdfld(out _));
+
             var instructions = new List<Instruction>();
             for (var i = 0; i < 8; i++)
             {

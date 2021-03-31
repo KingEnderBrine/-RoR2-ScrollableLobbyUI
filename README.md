@@ -23,6 +23,10 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 ***
 # Changelog
+**1.6.0**
+
+* Removed r2api dependency
+
 **1.5.1**
 
 * Changed row arrows background. Now it's a blured out scene (like whole loadout panel) instead of black color.
