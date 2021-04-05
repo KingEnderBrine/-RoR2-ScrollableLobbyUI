@@ -23,9 +23,13 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 ***
 # Changelog
+**1.6.1**
+
+* Repackaged zip with lowercase `plugins` folder (to avoid a bug in `r2modman` for linux).
+
 **1.6.0**
 
-* Removed r2api dependency
+* Removed r2api dependency.
 
 **1.5.1**
 

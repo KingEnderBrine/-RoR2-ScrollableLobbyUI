@@ -8,7 +8,7 @@ using System.Security.Permissions;
 [assembly: EnigmaticThunder.Util.ManualNetworkRegistration]
 namespace ScrollableLobbyUI
 {
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.6.0")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.6.1")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {

@@ -1,6 +1,6 @@
 {
     "name": "ScrollableLobbyUI",
-    "version_number": "1.6.0",
+    "version_number": "1.6.1",
     "website_url": "https://github.com/KingEnderBrine/-RoR2-ScrollableLobbyUI",
     "description": "Adds scrolling to lobby UI (skills, loadout, character select, difficulty)",
     "dependencies": [
