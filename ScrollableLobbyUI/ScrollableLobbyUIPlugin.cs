@@ -4,11 +4,9 @@ using System.Security.Permissions;
 
 [module: UnverifiableCode]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
-[assembly: R2API.Utils.ManualNetworkRegistration]
-[assembly: EnigmaticThunder.Util.ManualNetworkRegistration]
 namespace ScrollableLobbyUI
 {
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.6.1")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.6.2")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {

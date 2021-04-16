@@ -5,6 +5,7 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 #### Mouse
 
 * `Character select` - there are now buttons in character select so you can change page with surviors.
+* `Overview` - scroll mouse wheel to move up/down. 
 * `Skills` - scroll mouse wheel to move up/down.
 * `Loadout` - scroll mouse wheel to move up/down.
 * `Loadout rows` - drag icons left/right to scroll individual rows in loadout or use arrows on the sides of a row.
@@ -13,6 +14,7 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 #### Gamepad
 
 * `Character select` - press LB/RB in character select so you can change page with surviors.
+* `Overwien` - move left stick up/down.
 * `Skills` - when you select row that out of panel it will be scrolled to that row.
 * `Loadout` - when you select icon that out of panel it will be scrolled to that icon.
 * `Loadout rows` - when you select icon that out of panel it will be scrolled to that icon.
@@ -21,8 +23,14 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 # Bugs
 Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
-***
+
+If you want to support me, [you can do this here](https://www.buymeacoffee.com/KingEnderBrine)
+
 # Changelog
+**1.6.2**
+
+* Added scrolling to survivor Overview panel. (Request by `tymmey`)
+
 **1.6.1**
 
 * Repackaged zip with lowercase `plugins` folder (to avoid a bug in `r2modman` for linux).

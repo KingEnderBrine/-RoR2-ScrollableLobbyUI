@@ -40,6 +40,21 @@ namespace ScrollableLobbyUI
             //Adding container on top of SkillPanel
             var skillScrollPanel = AddScrollPanel(self.transform.parent.parent.Find("SkillPanel"), "SkillsScrollPanel");
 
+            //Adding container on top of OverviewPanel
+            var overviewPanel = self.transform.parent.parent.Find("OverviewPanel");
+            var overviewScrollPanel = AddScrollPanel(overviewPanel, "OverviewScrollPanel");
+            var overviewLayoutGroup = overviewPanel.gameObject.AddComponent<VerticalLayoutGroup>();
+            overviewLayoutGroup.childControlHeight = true;
+            overviewLayoutGroup.childControlWidth = true;
+            overviewLayoutGroup.childForceExpandHeight = true;
+            overviewLayoutGroup.childForceExpandWidth = true;
+
+            var overviewScrollHelper = overviewScrollPanel.AddComponent<GamepadScrollRectHelper>();
+            overviewScrollHelper.requiredTopLayer = uiLayerKey;
+
+            var survivorDescriptionPanel = self.transform.parent.parent.parent.parent.Find("SurvivorInfoPanel, Inactive/DescriptionPanel, Naked");
+            survivorDescriptionPanel.gameObject.AddComponent<RectMask2D>();
+
             //Moving out descriptionPanel, so it will not be hidden by mask
             MoveUpDescription("DescriptionPanel, Loadout", "LoadoutScrollContainer", loadoutScrollPanel);
             MoveUpDescription("DescriptionPanel, Skill", "SkillScrollContainer", skillScrollPanel);
