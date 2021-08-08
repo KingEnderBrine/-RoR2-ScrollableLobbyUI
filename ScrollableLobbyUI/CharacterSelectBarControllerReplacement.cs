@@ -86,7 +86,7 @@ namespace ScrollableLobbyUI
                     survivorDescription = survivorDescription.Substring(0, length);
                 }
 
-                var unlockableDef = UnlockableCatalog.GetUnlockableDef(survivorDef.unlockableName);
+                var unlockableDef = survivorDef.unlockableDef;
                 if (unlockableDef != null)
                 {
                     if (SurvivorCatalog.SurvivorIsUnlockedOnThisClient(survivorIndex))

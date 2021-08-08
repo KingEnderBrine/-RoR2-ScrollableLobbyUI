@@ -27,6 +27,10 @@ Feel free to ping me on discord `@KingEnderBrine` if you found one.
 If you want to support me, [you can do this here](https://www.buymeacoffee.com/KingEnderBrine)
 
 # Changelog
+**1.6.3**
+
+* Added scrolling for artifact selection pop-up
+
 **1.6.2**
 
 * Added scrolling to survivor Overview panel. (Request by `tymmey`)

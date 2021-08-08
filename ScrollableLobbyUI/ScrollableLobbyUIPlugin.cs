@@ -6,7 +6,7 @@ using System.Security.Permissions;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace ScrollableLobbyUI
 {
-    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.6.2")]
+    [BepInPlugin("com.KingEnderBrine.ScrollableLobbyUI", "Scrollable lobby UI", "1.6.3")]
 
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {

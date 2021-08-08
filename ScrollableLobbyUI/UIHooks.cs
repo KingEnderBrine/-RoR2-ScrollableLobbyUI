@@ -437,20 +437,62 @@ namespace ScrollableLobbyUI
         {
             orig(self, categoryDef, availability, ruleBook);
 
-            var stripContainer = self.transform.Find("StripContainer");
-            if (!stripContainer.gameObject.activeInHierarchy)
+            if (self.ruleCategoryType == RuleCatalog.RuleCategoryType.StripVote)
             {
-                return;
+                var stripContainer = self.transform.Find("StripContainer");
+                if (stripContainer.gameObject.activeInHierarchy)
+                {
+                    stripContainer.Find("FrameContainer").gameObject.SetActive(false);
+
+                    for (var i = 0; i < stripContainer.childCount; i++)
+                    {
+                        var child = stripContainer.GetChild(i);
+                        if (child.gameObject.activeSelf)
+                        {
+                            SetupStripPrefab(child);
+                        }
+                    }
+                }
             }
 
-            stripContainer.Find("FrameContainer").gameObject.SetActive(false);
-
-            for (var i = 0; i < stripContainer.childCount; i++)
+            if (self.ruleCategoryType == RuleCatalog.RuleCategoryType.VoteResultGrid)
             {
-                var child = stripContainer.GetChild(i);
-                if (child.gameObject.activeSelf)
+                foreach (var controller in self.popoutButtonIconAllocator.elements)
                 {
-                    SetupStripPrefab(child);
+                    var button = controller.hgButton;
+                    //Scroll to selected row if it's not fully visible
+                    button.onSelect.AddListener(() =>
+                    {
+                        var scrollRect = button.GetComponentInParent<ScrollRect>();
+                        var eventSystemLocator = scrollRect.GetComponent<RoR2.UI.MPEventSystemLocator>();
+
+                        if (!eventSystemLocator || !eventSystemLocator.eventSystem || eventSystemLocator.eventSystem.currentInputSource != RoR2.UI.MPEventSystem.InputSource.Gamepad)
+                        {
+                            return;
+                        }
+
+                        var content = scrollRect.content;
+                        var cellRectTransform = button.GetComponent<RectTransform>();
+                        var scrollRectTransform = scrollRect.GetComponent<RectTransform>();
+
+                        var cellPosition = (Vector2)content.InverseTransformPoint(cellRectTransform.position);
+                        var insideScrollPosition = (Vector2)scrollRectTransform.InverseTransformPoint(cellRectTransform.position);
+
+                        var scrollHeight = scrollRectTransform.rect.height;
+                        var contentHeight = content.rect.height;
+                        var cellHeigth = cellRectTransform.rect.height;
+                        var halfCellHeight = cellRectTransform.rect.height / 2;
+                        var padding = 12;
+
+                        if (cellPosition.y + halfCellHeight + padding > -content.anchoredPosition.y + scrollHeight)
+                        {
+                            content.anchoredPosition = new Vector2(content.anchoredPosition.x, Math.Max(0, -cellPosition.y - halfCellHeight - padding + scrollHeight));
+                        }
+                        else if (-content.anchoredPosition.y > cellPosition.y - halfCellHeight - padding)
+                        {
+                            content.anchoredPosition = new Vector2(content.anchoredPosition.x, Math.Max(0, -cellPosition.y + halfCellHeight + padding));
+                        }
+                    });
                 }
             }
         }
@@ -582,6 +624,10 @@ namespace ScrollableLobbyUI
         internal static void RuleBookViewerAwake(On.RoR2.UI.RuleBookViewer.orig_Awake orig, RoR2.UI.RuleBookViewer self)
         {
             var ruleChoicePrefab = self.transform.Find("RuleChoicePrefab");
+            foreach(var rcdo in ruleChoicePrefab.GetComponentsInChildren<RefreshCanvasDrawOrder>(true))
+            {
+                rcdo.enabled = false;
+            }
 
             var selectedHighlight = GameObject.Instantiate(ruleChoicePrefab.transform.Find("ButtonSelectionHighlight, Checkbox"), ruleChoicePrefab, false);
             selectedHighlight.name = "ButtonSelectionHighlight, Selected";
@@ -594,6 +640,66 @@ namespace ScrollableLobbyUI
             highlightRect.offsetMax = new Vector2();
 
             selectedHighlight.Find("Checkbox").gameObject.SetActive(false);
+
+            var panelPrefab = self.transform.GetComponentInChildren<RuleCategoryController>(true).popoutPanelPrefab;
+            var contentContainer = panelPrefab.transform.Find("Canvas/Main/ContentContainer");
+            var contentRectTransform = contentContainer as RectTransform;
+
+            var scrollPanel = new GameObject("ScrollPanel");
+            scrollPanel.transform.SetParent(contentContainer.parent, false);
+            scrollPanel.layer = LayerIndex.ui.intVal;
+            scrollPanel.transform.SetSiblingIndex(5);
+            var sprt = scrollPanel.AddComponent<RectTransform>();
+            sprt.anchorMin = new Vector2(0.5F, 0);
+            sprt.anchorMax = new Vector2(0.5F, 0);
+            sprt.pivot = new Vector2(0.5F, 0);
+            scrollPanel.AddComponent<LayoutElement>();
+            scrollPanel.AddComponent<MPEventSystemLocator>();
+
+            var viewPort = new GameObject("ViewPort");
+            viewPort.transform.SetParent(scrollPanel.transform, false);
+            viewPort.layer = LayerIndex.ui.intVal;
+            var vprt = viewPort.AddComponent<RectTransform>();
+            vprt.anchorMin = new Vector2(0F, 0F);
+            vprt.anchorMax = new Vector2(1F, 1F);
+            vprt.sizeDelta = new Vector2();
+            viewPort.AddComponent<RectMask2D>();
+
+            //var scrollbarObject = GameObject.Instantiate(self.transform.Find("Scrollbar Vertical"), scrollPanel.transform);
+            //var mpScrollbar = scrollbarObject.GetComponent<MPScrollbar>();
+            //var scrollbarRectTransform = scrollbarObject.GetComponent<RectTransform>();
+            //scrollbarRectTransform.offsetMin = new Vector2(-16, 0);
+            //scrollbarRectTransform.offsetMax = new Vector2(0, 0);
+
+            var sr = scrollPanel.AddComponent<ScrollRect>();
+            sr.content = contentRectTransform;
+            sr.viewport = viewPort.transform as RectTransform;
+            sr.scrollSensitivity = 30F;
+            sr.horizontal = false;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.inertia = false;
+            //sr.verticalScrollbar = mpScrollbar;
+            //sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+            //sr.verticalScrollbarSpacing = 16;
+
+            contentContainer.SetParent(viewPort.transform, false);
+            var contentFitter = contentContainer.gameObject.AddComponent<ContentSizeFitter>();
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            contentFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            var contentImage = contentContainer.GetComponent<Image>();
+            contentImage.enabled = true;
+            contentImage.color = Color.clear;
+            var grid = contentContainer.GetComponent<GridLayoutGroup>();
+            grid.spacing = new Vector2(6, 12);
+            grid.childAlignment = TextAnchor.UpperCenter;
+            contentRectTransform.pivot = new Vector2(0.5F, 1);
+            contentRectTransform.anchorMin = new Vector2(0, 0);
+            contentRectTransform.anchorMax = new Vector2(1, 0);
+
+            var fitter = scrollPanel.AddComponent<DynamicContentSizeFitter>();
+            fitter.maxHeight = 425;
+            fitter.useMaxHeight = true;
+            fitter.watchTransform = contentContainer as RectTransform;
 
             orig(self);
         }
