@@ -22,15 +22,8 @@ namespace ScrollableLobbyUI
         {
             var contentOutOfRect = rectTransform.rect.width < scrollRect.content.rect.width;
 
-            if (!contentOutOfRect)
-            {
-                left.SetActive(false);
-                right.SetActive(false);
-                return;
-            }
-
-            left.SetActive(scrollRect.horizontalNormalizedPosition > deadzone);
-            right.SetActive(scrollRect.horizontalNormalizedPosition < 1 - deadzone);
+            left.SetActive(contentOutOfRect && scrollRect.horizontalNormalizedPosition > deadzone);
+            right.SetActive(contentOutOfRect && scrollRect.horizontalNormalizedPosition < 1 - deadzone);
 
         }
     }

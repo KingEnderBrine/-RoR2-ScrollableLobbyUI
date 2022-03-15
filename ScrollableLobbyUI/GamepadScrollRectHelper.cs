@@ -10,25 +10,16 @@ namespace ScrollableLobbyUI
         public float stickScale = 3000;
         private ScrollRect scrollRect;
         private MPEventSystemLocator eventSystemLocator;
-        private bool hasInitialized;
 
         private void Start()
         {
-            this.Initialize();
-        }
-
-        private void Initialize()
-        {
-            if (hasInitialized)
-                return;
-            hasInitialized = true;
             scrollRect = GetComponent<ScrollRect>();
             eventSystemLocator = GetComponent<MPEventSystemLocator>();
         }
 
         private bool GamepadIsCurrentInputSource()
         {
-            return hasInitialized && eventSystemLocator.eventSystem && eventSystemLocator.eventSystem.currentInputSource == MPEventSystem.InputSource.Gamepad;
+            return eventSystemLocator && eventSystemLocator.eventSystem && eventSystemLocator.eventSystem.currentInputSource == MPEventSystem.InputSource.Gamepad;
         }
 
         private bool CanAcceptInput()
@@ -38,15 +29,12 @@ namespace ScrollableLobbyUI
 
         private void Update()
         {
-            this.Initialize();
-            if (!this.GamepadIsCurrentInputSource())
+            if (!this.GamepadIsCurrentInputSource() || !CanAcceptInput())
                 return;
-            if (eventSystemLocator && eventSystemLocator.eventSystem && CanAcceptInput())
-            {
-                float height = scrollRect.content.rect.height;
-                float axis1 = eventSystemLocator.eventSystem.player.GetAxis(13);
-                scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition + axis1 * stickScale * Time.unscaledDeltaTime / height);
-            }
+
+            var height = scrollRect.content.rect.height;
+            var axis = eventSystemLocator.eventSystem.player.GetAxis(13);
+            scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollRect.verticalNormalizedPosition + axis * stickScale * Time.unscaledDeltaTime / height);
         }
     }
 }

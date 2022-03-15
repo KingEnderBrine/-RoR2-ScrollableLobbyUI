@@ -27,6 +27,10 @@ namespace ScrollableLobbyUI
 
         private void OnGUI()
         {
+            if (!watchTransform)
+            {
+                return;
+            }
             var watchRect = watchTransform.rect;
             if (useMaxWidth)
             {

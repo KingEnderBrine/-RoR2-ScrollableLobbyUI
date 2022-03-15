@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -21,7 +22,6 @@ namespace ScrollableLobbyUI
         private const float ruleScrollDuration = 0.1F;
 
         private static readonly List<RoR2.UI.HGButton> buttonsWithListeners = new List<RoR2.UI.HGButton>();
-        private static Material defaultTranslucentMaterial;
 
         internal static void LoadoutPanelControllerAwake(On.RoR2.UI.LoadoutPanelController.orig_Awake orig, RoR2.UI.LoadoutPanelController self)
         {
@@ -123,17 +123,6 @@ namespace ScrollableLobbyUI
             }
         }
 
-        internal static void CharacterSelectControllerRebuildAwake(On.RoR2.UI.CharacterSelectController.orig_Awake orig, RoR2.UI.CharacterSelectController self)
-        {
-            orig(self);
-
-            if (defaultTranslucentMaterial)
-            {
-                return;
-            }
-            defaultTranslucentMaterial = GameObject.Instantiate(self.transform.Find("SafeArea/LeftHandPanel (Layer: Main)/BlurPanel").GetComponent<TranslucentImage>().material);
-        }
-
         internal static void LoadoutPanelControllerOnDestroy(On.RoR2.UI.LoadoutPanelController.orig_OnDestroy orig, RoR2.UI.LoadoutPanelController self)
         {
             orig(self);
@@ -193,13 +182,13 @@ namespace ScrollableLobbyUI
                     if (buttonPosition.x + buttonWidth + buttonsPadding > 0)
                     {
                         buttonsContentPanel.anchoredPosition = new Vector2(
-                            -buttonRectTransform.anchoredPosition.x - buttonWidth + buttonsScrollWidth - buttonsPadding,
+                            -buttonRectTransform.anchoredPosition.x - buttonWidth + buttonsScrollWidth - buttonsPadding - 24,
                             buttonsContentPanel.anchoredPosition.y);
                     }
                     else if (buttonPosition.x - buttonsPadding < -buttonsScrollWidth)
                     {
                         buttonsContentPanel.anchoredPosition = new Vector2(
-                            -buttonRectTransform.anchoredPosition.x + buttonsPadding,
+                            -buttonRectTransform.anchoredPosition.x + buttonsPadding + 24,
                             buttonsContentPanel.anchoredPosition.y);
                     }
                 });
@@ -299,7 +288,7 @@ namespace ScrollableLobbyUI
 
             GameObject SetupButton(string buttonPrefix, Transform parent, MoveDirection moveDirection, float xNormalized)
             {
-                var scrollButton = GameObject.Instantiate(Resources.Load<GameObject>($"prefabs/ui/controls/buttons/{buttonPrefix}Button"), parent, false);
+                var scrollButton = GameObject.Instantiate(Addressables.LoadAssetAsync<GameObject>($"RoR2/Base/UI/{buttonPrefix}Button.prefab").WaitForCompletion(), parent, false);
                 scrollButton.name = $"{buttonPrefix}ScrollButton";
                 scrollButton.layer = 5;
 
@@ -322,7 +311,7 @@ namespace ScrollableLobbyUI
                 
                 GameObject.DestroyImmediate(hgButton.targetGraphic);
                 var translucentImage = scrollButton.AddComponent<TranslucentImage>();
-                translucentImage.material = defaultTranslucentMaterial;
+                translucentImage.material = Addressables.LoadAssetAsync<Material>("TranslucentImage/Default-Translucent.mat").WaitForCompletion();
                 translucentImage.color = Color.black;
 
                 hgButton.targetGraphic = arrowImage;
@@ -389,10 +378,10 @@ namespace ScrollableLobbyUI
                     return;
                 }
 
-                button.onSelect.AddListener(onScrollListener);
+                button.onSelect.AddListener(OnScrollListener);
                 buttonsWithListeners.Add(button);
 
-                void onScrollListener()
+                void OnScrollListener()
                 {
                     var rowsScrollRect = button.GetComponentInParent<ConstrainedScrollRect>();
                     var eventSystemLocator = rowsScrollRect.GetComponent<RoR2.UI.MPEventSystemLocator>();
@@ -425,12 +414,31 @@ namespace ScrollableLobbyUI
             });
         }
 
-        internal static void CharacterSelectBarControllerUpdate(On.RoR2.CharacterSelectBarController.orig_Update orig, RoR2.CharacterSelectBarController self) { }
         internal static void RuleBookViewerStripUpdate(On.RoR2.UI.RuleBookViewerStrip.orig_Update orig, RoR2.UI.RuleBookViewerStrip self) { }
 
-        internal static void CharacterSelectBarControllerStart(On.RoR2.CharacterSelectBarController.orig_Start orig, RoR2.CharacterSelectBarController self)
+        internal static void CharacterSelectBarControllerAwake(On.RoR2.CharacterSelectBarController.orig_Awake orig, RoR2.CharacterSelectBarController self)
         {
-            self.gameObject.AddComponent<CharacterSelectBarControllerReplacement>();
+            orig(self);
+            self.gameObject.AddComponent<CharacterSelectBarControllerExtra>();
+        }
+
+        internal static void CharacterSelectBarControllerBuild(On.RoR2.CharacterSelectBarController.orig_Build orig, RoR2.CharacterSelectBarController self)
+        {
+            var extra = self.GetComponent<CharacterSelectBarControllerExtra>();
+            extra.Build();
+        }
+
+        internal static void CharacterSelectBarControllerEnforceValidChoice(On.RoR2.CharacterSelectBarController.orig_EnforceValidChoice orig, RoR2.CharacterSelectBarController self)
+        {
+            var extra = self.GetComponent<CharacterSelectBarControllerExtra>();
+            extra.EnforceValidChoice();
+        }
+
+        internal static void CharacterSelectBarControllerPickIconBySurvivorDef(On.RoR2.CharacterSelectBarController.orig_PickIconBySurvivorDef orig, RoR2.CharacterSelectBarController self, SurvivorDef survivorDef)
+        {
+            var extra = self.GetComponent<CharacterSelectBarControllerExtra>();
+            extra.OpenPageWithCharacter(survivorDef);
+            orig(self, survivorDef);
         }
 
         internal static void RuleCategoryControllerSetData(On.RoR2.UI.RuleCategoryController.orig_SetData orig, RoR2.UI.RuleCategoryController self, RuleCategoryDef categoryDef, RuleChoiceMask availability, RuleBook ruleBook)
@@ -665,12 +673,6 @@ namespace ScrollableLobbyUI
             vprt.sizeDelta = new Vector2();
             viewPort.AddComponent<RectMask2D>();
 
-            //var scrollbarObject = GameObject.Instantiate(self.transform.Find("Scrollbar Vertical"), scrollPanel.transform);
-            //var mpScrollbar = scrollbarObject.GetComponent<MPScrollbar>();
-            //var scrollbarRectTransform = scrollbarObject.GetComponent<RectTransform>();
-            //scrollbarRectTransform.offsetMin = new Vector2(-16, 0);
-            //scrollbarRectTransform.offsetMax = new Vector2(0, 0);
-
             var sr = scrollPanel.AddComponent<ScrollRect>();
             sr.content = contentRectTransform;
             sr.viewport = viewPort.transform as RectTransform;
@@ -678,9 +680,6 @@ namespace ScrollableLobbyUI
             sr.horizontal = false;
             sr.movementType = ScrollRect.MovementType.Clamped;
             sr.inertia = false;
-            //sr.verticalScrollbar = mpScrollbar;
-            //sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
-            //sr.verticalScrollbarSpacing = 16;
 
             contentContainer.SetParent(viewPort.transform, false);
             var contentFitter = contentContainer.gameObject.AddComponent<ContentSizeFitter>();
