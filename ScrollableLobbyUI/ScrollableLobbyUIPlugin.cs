@@ -12,7 +12,7 @@ namespace ScrollableLobbyUI
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.7.0";
+        public const string Version = "1.7.1";
 
         private void Awake()
         {

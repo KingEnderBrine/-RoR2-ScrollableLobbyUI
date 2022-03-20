@@ -75,7 +75,7 @@ namespace ScrollableLobbyUI
                 scrollPanelRect.content = panel.GetComponent<RectTransform>();
                 scrollPanelRect.scrollSensitivity = 30;
                 scrollPanelRect.movementType = ScrollRect.MovementType.Clamped;
-                scrollPanelRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyScroll;
+                scrollPanelRect.scrollConstraint = ConstrainedScrollRect.Constraint.None;
 
                 //Adding ContentSizeFilter, otherwise childs would have been wrong size
                 var panelContentSizeFilter = panel.gameObject.AddComponent<ContentSizeFitter>();

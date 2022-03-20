@@ -5,9 +5,9 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 #### Mouse
 
 * `Character select` - there are now buttons in character select so you can change page with surviors.
-* `Overview` - scroll mouse wheel to move up/down. 
-* `Skills` - scroll mouse wheel to move up/down.
-* `Loadout` - scroll mouse wheel to move up/down.
+* `Overview` - scroll mouse wheel to move up/down or drag up/down.
+* `Skills` - scroll mouse wheel to move up/down or drag up/down.
+* `Loadout` - scroll mouse wheel to move up/down or drag something except icons up/down.
 * `Loadout rows` - drag icons left/right to scroll individual rows in loadout or use arrows on the sides of a row.
 * `Difficulty` - drag icons left/right to scroll
 
@@ -24,6 +24,10 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 # Changelog
+**1.7.1**
+
+* Added dragging to loadout, overview and skills panels
+
 **1.7.0**
 
 * Fixes for `Survivors of the Void` update.
