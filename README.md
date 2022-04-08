@@ -24,6 +24,10 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 # Changelog
+**1.7.3**
+
+* Fixed cyclic dependency with `InLobbyConfig` resulting in mods not loading
+
 **1.7.2**
 
 * Added configuration for the amount of rows in the character select screen (2 by default, supports `InLobbyConfig`)

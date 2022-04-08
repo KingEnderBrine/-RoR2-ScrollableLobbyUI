@@ -7,13 +7,12 @@ using System.Security.Permissions;
 [assembly: AssemblyVersion(ScrollableLobbyUI.ScrollableLobbyUIPlugin.Version)]
 namespace ScrollableLobbyUI
 {
-    [BepInDependency(InLobbyConfigIntegration.GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, Name, Version)]
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.7.2";
+        public const string Version = "1.7.3";
 
         internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
 
