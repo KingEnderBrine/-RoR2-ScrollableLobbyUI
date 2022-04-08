@@ -21,6 +21,10 @@
       <HintPath>..\Libs\MMHOOK_RoR2.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="InLobbyConfig">
+      <HintPath>..\Libs\InLobbyConfig.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <Target Name="UpdateVerison" AfterTargets="AfterBuild">

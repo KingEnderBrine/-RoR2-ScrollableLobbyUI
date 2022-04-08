@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using System.Reflection;
 using System.Security.Permissions;
 
@@ -6,16 +7,20 @@ using System.Security.Permissions;
 [assembly: AssemblyVersion(ScrollableLobbyUI.ScrollableLobbyUIPlugin.Version)]
 namespace ScrollableLobbyUI
 {
+    [BepInDependency(InLobbyConfigIntegration.GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, Name, Version)]
-
     public class ScrollableLobbyUIPlugin : BaseUnityPlugin
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.7.1";
+        public const string Version = "1.7.2";
+
+        internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
 
         private void Awake()
         {
+            CharacterSelectRows = Config.Bind("Main", "CharacterSelectRows", 2, new ConfigDescription("The amount of rows that should be displayed in character select screen", new AcceptableValueRange<int>(1, 50)));
+
             //Editing skills overview UI to prevent auto resizing and add scrolling
             IL.RoR2.UI.CharacterSelectController.RebuildLocal += UIHooks.CharacterSelectControllerRebuildLocal;
 
@@ -34,6 +39,11 @@ namespace ScrollableLobbyUI
             On.RoR2.UI.RuleCategoryController.SetData += UIHooks.RuleCategoryControllerSetData;
             On.RoR2.UI.RuleBookViewerStrip.Update += UIHooks.RuleBookViewerStripUpdate;
             On.RoR2.UI.RuleBookViewerStrip.SetData += UIHooks.RuleBookViewerStripSetData;
+        }
+
+        private void Start()
+        {
+            InLobbyConfigIntegration.OnStart();
         }
     }
 }

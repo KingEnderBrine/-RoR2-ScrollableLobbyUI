@@ -15,14 +15,15 @@ namespace ScrollableLobbyUI
     [RequireComponent(typeof(CharacterSelectBarController))]
     public class CharacterSelectBarControllerExtra : MonoBehaviour
     {
-        private const int containerHeight = 156;
         private const int iconSize = 70;
         private const int iconSpacing = 4;
-        private const int iconPadding = 4;
+        private const int iconPadding = 6;
         private const int buttonSide = 37;
-        private const int survivorRows = 2;
-        public int survivorsPerPage = 2;
-        private int SurvivorsPerRow => survivorsPerPage / survivorRows;
+
+        private int SurvivorRows => ScrollableLobbyUIPlugin.CharacterSelectRows.Value;
+        private int SurvivorsPerRow { get; set; } = 1;
+        private int SurvivorsPerPage => SurvivorsPerRow * SurvivorRows;
+        private int ContainerHeight => (iconSize + iconSpacing) * SurvivorRows - iconSpacing + iconPadding * 2;
 
         private CharacterSelectBarController characterSelectBar;
         private HGButtonHistory buttonHistory;
@@ -35,6 +36,7 @@ namespace ScrollableLobbyUI
         private int fillerCount;
         private SurvivorDef pickedSurvivor;
 
+        private readonly List<LayoutElement> trackingHeightElements = new List<LayoutElement>();
         private readonly List<SurvivorDef> survivorDefList = new List<SurvivorDef>();
         private HGButton previousButtonComponent;
         private HGButton nextButtonComponent;
@@ -48,7 +50,7 @@ namespace ScrollableLobbyUI
         {
             characterSelectBar.pickedIcon = null;
             
-            var survivorDefs = survivorDefList.Skip(CurrentPageIndex * survivorsPerPage).Take(survivorsPerPage).ToArray();
+            var survivorDefs = survivorDefList.Skip(CurrentPageIndex * SurvivorsPerPage).Take(SurvivorsPerPage).ToArray();
             var elements = SurvivorIconControllers.elements;
 
             for (var index = 0; index < elements.Count; ++index)
@@ -116,11 +118,11 @@ namespace ScrollableLobbyUI
 
             //Updating layout
             var layoutElement = GetComponent<LayoutElement>();
+            trackingHeightElements.Add(layoutElement);
             layoutElement.preferredWidth = float.MaxValue;
-            layoutElement.preferredHeight = containerHeight;
 
             var choiceContainerLayout = transform.parent.GetComponent<LayoutElement>() ?? transform.parent.gameObject.AddComponent<LayoutElement>();
-            choiceContainerLayout.preferredHeight = containerHeight;
+            trackingHeightElements.Add(choiceContainerLayout);
 
             var choiceContainerContentFitter = transform.parent.gameObject.AddComponent<ContentSizeFitter>();
             choiceContainerContentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -133,7 +135,7 @@ namespace ScrollableLobbyUI
 
             var choiceGridHorizontalLayout = choiceGridContainer.AddComponent<HorizontalLayoutGroup>();
             var choiceGridLayout = choiceGridContainer.AddComponent<LayoutElement>();
-            choiceGridLayout.preferredHeight = containerHeight;
+            trackingHeightElements.Add(choiceGridLayout);
 
             //Define cell size (previous value: (-5, 70))
             IconContainerGrid.cellSize = new Vector2(iconSize, iconSize);
@@ -151,8 +153,12 @@ namespace ScrollableLobbyUI
 
         private void AllocateCells()
         {
-            SurvivorIconControllers.AllocateElements(Mathf.Min(survivorsPerPage, survivorDefList.Count));
-            SurvivorIconControllers.elements[0].GetComponent<MPButton>().defaultFallbackButton = true;
+            SurvivorIconControllers.AllocateElements(Mathf.Min(SurvivorsPerPage, survivorDefList.Count));
+            var first = SurvivorIconControllers.elements.FirstOrDefault();
+            if (first)
+            {
+                first.GetComponent<MPButton>().defaultFallbackButton = true;
+            }
             FillerIconControllers.AllocateElements(fillerCount);
             FillerIconControllers.MoveElementsToContainerEnd();
         }
@@ -173,17 +179,12 @@ namespace ScrollableLobbyUI
                 buttonContainer.transform.SetSiblingIndex(siblingIndex);
                 buttonContainer.layer = 5;
 
-                var buttonContentSizeFitter = buttonContainer.AddComponent<DynamicContentSizeFitter>();
-                buttonContentSizeFitter.useMaxHeight = true;
-                buttonContentSizeFitter.maxHeight = containerHeight;
-                buttonContentSizeFitter.watchTransform = buttonContainer.GetComponent<RectTransform>();
-
                 var buttonVerticalLayout = buttonContainer.AddComponent<VerticalLayoutGroup>();
                 buttonVerticalLayout.childControlHeight = true;
                 buttonVerticalLayout.childControlWidth = true;
 
-                var buttonContainerLayout = buttonContainer.GetComponent<LayoutElement>();
-                buttonContainerLayout.preferredHeight = containerHeight;
+                var buttonContainerLayout = buttonContainer.AddComponent<LayoutElement>();
+                trackingHeightElements.Add(buttonContainerLayout);
 
                 var button = Instantiate(Addressables.LoadAssetAsync<GameObject>($"RoR2/Base/UI/{buttonPrefix}Button.prefab").WaitForCompletion(), buttonContainer.transform, false);
                 button.name = $"{prefix}Page";
@@ -296,33 +297,73 @@ namespace ScrollableLobbyUI
             
             PrepareContainer();
             SetupPagingStuff();
+            UpdateHeights();
+        }
+
+        private void Start()
+        {
+            GatherSurvivorsInfo();
+        }
+
+        private void OnEnable()
+        {
+            ScrollableLobbyUIPlugin.CharacterSelectRows.SettingChanged += CharacterSelectRowsChanged;
+        }
+
+        private void OnDisable()
+        {
+            ScrollableLobbyUIPlugin.CharacterSelectRows.SettingChanged -= CharacterSelectRowsChanged;
+        }
+
+        private void CharacterSelectRowsChanged(object sender, EventArgs e)
+        {
+            Build();
         }
 
         private void Update()
         {
-            var containerWidth = (IconContainerGrid.transform.parent.parent.parent as RectTransform).rect.width - buttonSide * 2;
-            var newSurvivorsPerRow = Math.Max(1, (int)(containerWidth - iconPadding * 2) / (iconSize + iconSpacing));
+            var containerWidth = (IconContainerGrid.transform.parent.parent.parent as RectTransform).rect.width;
+            var newSurvivorsPerRow = Math.Max(1, (int)(containerWidth + iconSpacing - iconPadding * 2) / (iconSize + iconSpacing));
+            if (newSurvivorsPerRow * SurvivorRows <= survivorDefList.Count)
+            {
+                previousButtonComponent.transform.parent.gameObject.SetActive(true);
+                nextButtonComponent.transform.parent.gameObject.SetActive(true);
+                newSurvivorsPerRow = Math.Max(1, newSurvivorsPerRow - 1);
+            }
+            else
+            {
+                previousButtonComponent.transform.parent.gameObject.SetActive(false);
+                nextButtonComponent.transform.parent.gameObject.SetActive(false);
+            }
+
             if (newSurvivorsPerRow != SurvivorsPerRow)
             {
-                var previousFirstIconIndex = CurrentPageIndex * survivorsPerPage;
-                survivorsPerPage = newSurvivorsPerRow * survivorRows;
-                CurrentPageIndex = previousFirstIconIndex / survivorsPerPage;
+                var previousFirstIconIndex = CurrentPageIndex * SurvivorsPerPage;
+                SurvivorsPerRow = newSurvivorsPerRow;
+                CurrentPageIndex = previousFirstIconIndex / SurvivorsPerPage;
 
                 Build();
-                RebuildPage();
+            }
+        }
+
+        private void UpdateHeights()
+        {
+            foreach (var element in trackingHeightElements)
+            {
+                element.minHeight = ContainerHeight;
+                element.preferredHeight = ContainerHeight;
             }
         }
 
         internal void Build()
         {
-            GatherSurvivorsInfo();
-
             var survivorMaxCount = survivorDefList.Count;
-            PageCount = survivorMaxCount / survivorsPerPage + (survivorMaxCount % survivorsPerPage > 0 ? 1 : 0);
-            fillerCount = PageCount * survivorsPerPage - survivorMaxCount;
+            PageCount = survivorMaxCount / SurvivorsPerPage + (survivorMaxCount % SurvivorsPerPage > 0 ? 1 : 0);
+            fillerCount = PageCount * SurvivorsPerPage - survivorMaxCount;
             CurrentPageIndex = Mathf.Clamp(CurrentPageIndex, 0, PageCount - 1);
             IconContainerGrid.constraintCount = SurvivorsPerRow;
 
+            UpdateHeights();
             AllocateCells();
             RebuildPage();
         }
@@ -391,7 +432,7 @@ namespace ScrollableLobbyUI
             {
                 return;
             }
-            CurrentPageIndex = index / survivorsPerPage;
+            CurrentPageIndex = index / SurvivorsPerPage;
             RebuildPage();
         }
     }

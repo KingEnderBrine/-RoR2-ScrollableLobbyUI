@@ -24,6 +24,11 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 # Changelog
+**1.7.2**
+
+* Added configuration for the amount of rows in the character select screen (2 by default, supports `InLobbyConfig`)
+* Now arrows are not shown if all survivors can fit into a single page without arrows.
+
 **1.7.1**
 
 * Added dragging to loadout, overview and skills panels
