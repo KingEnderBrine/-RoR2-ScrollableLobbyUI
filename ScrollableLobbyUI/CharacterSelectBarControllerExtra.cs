@@ -101,7 +101,11 @@ namespace ScrollableLobbyUI
 
         private void GatherSurvivorsInfo()
         {
-            survivorDefList.Clear();
+            if (survivorDefList.Count > 0)
+            {
+                return;
+            }
+
             foreach (var survivorDef in SurvivorCatalog.orderedSurvivorDefs)
             {
                 if (characterSelectBar.ShouldDisplaySurvivor(survivorDef))
@@ -300,11 +304,6 @@ namespace ScrollableLobbyUI
             UpdateHeights();
         }
 
-        private void Start()
-        {
-            GatherSurvivorsInfo();
-        }
-
         private void OnEnable()
         {
             ScrollableLobbyUIPlugin.CharacterSelectRows.SettingChanged += CharacterSelectRowsChanged;
@@ -357,6 +356,8 @@ namespace ScrollableLobbyUI
 
         internal void Build()
         {
+            GatherSurvivorsInfo();
+
             var survivorMaxCount = survivorDefList.Count;
             PageCount = survivorMaxCount / SurvivorsPerPage + (survivorMaxCount % SurvivorsPerPage > 0 ? 1 : 0);
             fillerCount = PageCount * SurvivorsPerPage - survivorMaxCount;
