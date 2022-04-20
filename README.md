@@ -24,6 +24,10 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 # Changelog
+**1.7.5**
+
+* Rebuilt for game update `1.2.3.1`
+
 **1.7.4**
 
 * Fixed an issue where joining a lobby wouldn't select your last picked character
