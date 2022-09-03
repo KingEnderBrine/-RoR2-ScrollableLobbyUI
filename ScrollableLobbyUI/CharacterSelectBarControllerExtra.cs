@@ -323,7 +323,7 @@ namespace ScrollableLobbyUI
         {
             var containerWidth = (IconContainerGrid.transform.parent.parent.parent as RectTransform).rect.width;
             var newSurvivorsPerRow = Math.Max(1, (int)(containerWidth + iconSpacing - iconPadding * 2) / (iconSize + iconSpacing));
-            if (newSurvivorsPerRow * SurvivorRows <= survivorDefList.Count)
+            if (newSurvivorsPerRow * SurvivorRows < survivorDefList.Count)
             {
                 previousButtonComponent.transform.parent.gameObject.SetActive(true);
                 nextButtonComponent.transform.parent.gameObject.SetActive(true);
