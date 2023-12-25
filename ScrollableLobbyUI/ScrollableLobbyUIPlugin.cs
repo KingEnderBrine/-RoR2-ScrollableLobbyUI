@@ -16,9 +16,12 @@ namespace ScrollableLobbyUI
 
         internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
 
+        internal static ConfigEntry<bool> PagingVariant { get; private set; }
+
         private void Awake()
         {
             CharacterSelectRows = Config.Bind("Main", "CharacterSelectRows", 2, new ConfigDescription("The amount of rows that should be displayed in character select screen", new AcceptableValueRange<int>(1, 50)));
+            PagingVariant = Config.Bind("Main", "Paging Variant", true, new ConfigDescription("If the arrows should be placed to the side of the character list (false) or if they should be placed in a survivor square (true)"));
 
             //Editing skills overview UI to prevent auto resizing and add scrolling
             IL.RoR2.UI.CharacterSelectController.RebuildLocal += UIHooks.CharacterSelectControllerRebuildLocal;
