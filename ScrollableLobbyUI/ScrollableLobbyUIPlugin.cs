@@ -18,10 +18,13 @@ namespace ScrollableLobbyUI
 
         internal static ConfigEntry<bool> PagingVariant { get; private set; }
 
+        internal static ConfigEntry<bool> ScrollVariant { get; private set; }
+
         private void Awake()
         {
             CharacterSelectRows = Config.Bind("Main", "CharacterSelectRows", 2, new ConfigDescription("The amount of rows that should be displayed in character select screen", new AcceptableValueRange<int>(1, 50)));
-            PagingVariant = Config.Bind("Main", "Paging Variant", true, new ConfigDescription("If the arrows should be placed to the side of the character list (false) or if they should be placed in a survivor square (true)"));
+            PagingVariant = Config.Bind("Main", "Variant: Character Paging", true, new ConfigDescription("Sets if the arrows should be placed to the side of the character list (false) or if they should be placed in a survivor square (true)."));
+            ScrollVariant = Config.Bind("Main", "Variant: Skills and Skins Scrolling", true, new ConfigDescription("Sets if rows of skills or skins with too many entries should have arrows for scrolling (false) or if they should be scrollable with your mouse if hovered over (true). Both still let you click and drag to scroll."));
 
             //Editing skills overview UI to prevent auto resizing and add scrolling
             IL.RoR2.UI.CharacterSelectController.RebuildLocal += UIHooks.CharacterSelectControllerRebuildLocal;

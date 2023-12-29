@@ -53,22 +53,89 @@ namespace ScrollableLobbyUI
 
         private void RebuildPage()
         {
+            Debug.Log("rebuild page BEGIN! " + CurrentPageIndex);
             characterSelectBar.pickedIcon = null;
-            
+            if (SurvivorsPerPage == 2 && survivorDefList.Count > 2){
+                Debug.Log("SPECIAL CALL! SIZE IS 2");
+            }
+
             if (ScrollableLobbyUIPlugin.PagingVariant.Value)
             {
+                Debug.Log("NEW rebuild page called for " + CurrentPageIndex + " | " + SurvivorsPerPage);
                 SurvivorDef[] survivorDefs;
+
+                if(SurvivorsPerPage == 2 && survivorDefList.Count > 2)
+                {
+                    Debug.Log("");
+                    //ar survivorDefs = survivorDefList.Skip(CurrentPageIndex * SurvivorsPerPage).Take(SurvivorsPerPage).ToArray();
+                    //ar elements = SurvivorIconControllers.elements;
+                    //ar survivorDef = survivorDefs[index];
+                    //lement.survivorDef = survivorDef;
+                    //
+                    //f (pickedSurvivor == survivorDef)
+                    //
+                    //   characterSelectBar.pickedIcon = element;
+                    //}
+                    
+                    var survivorDefs2 = survivorDefList.Skip(CurrentPageIndex * SurvivorsPerPage).Take(SurvivorsPerPage).ToArray();
+                    var elements2 = SurvivorIconControllers.elements;
+
+                    foreach (var surv in survivorDefs2)
+                    {
+                        Debug.Log("YEAG: " + surv.displayNameToken);
+                    }
+
+                    for (var index = 0; index < elements2.Count; ++index)
+                    {
+                        var element = elements2[index];
+                        try
+                        {
+                            Debug.Log("ELEMENT : " + element.survivorDef.displayNameToken);
+                        }
+                        catch
+                        {
+                            Debug.Log("FUCK");
+                        }
+
+                        if (index >= survivorDefs2.Length)
+                        {
+                            element.gameObject.SetActive(false);
+                            continue;
+                        }
+
+                        element.gameObject.SetActive(true);
+                        Debug.Log(survivorDefs2[index].displayNameToken + " FOUND YOU");
+
+                        var survivorDef = survivorDefs2[index];
+                        element.survivorDef = survivorDef;
+
+                        if (pickedSurvivor == survivorDef)
+                        {
+                            characterSelectBar.pickedIcon = element;
+                        }
+                        //Debug.Log(survivorDefs[index].displayNameToken + " FOUND YOU");
+                    }
+
+                    return;
+                }
+
                 //if (IsOnFirstPage)
                 //{
                 //    survivorDefs = survivorDefList.Skip(CurrentPageIndex * SurvivorsPerPage).Take(SurvivorsPerPage).ToArray();
                 //}
                 if (IsOnFirstPage)
                 {
-                    if (SurvivorsPerRow == survivorDefList.Count){
+                    if (SurvivorsPerPage == survivorDefList.Count){
+                        Debug.Log("Yeah first page");
                         survivorDefs = survivorDefList.Skip(CurrentPageIndex * SurvivorsPerRow).Take(SurvivorsPerPage).ToArray();
-                    }else{
-                        survivorDefs = survivorDefList.Skip((CurrentPageIndex * SurvivorsPerRow) - 1).Take(SurvivorsPerPage).ToArray();
+                        Debug.Log("Yeah first page " + survivorDefs.Length);
                     }
+                    else{
+                        
+                        survivorDefs = survivorDefList.Skip((CurrentPageIndex * SurvivorsPerRow) - 1).Take(SurvivorsPerPage).ToArray();
+                        Debug.Log("Yeah first page SUCKS " + survivorDefs.Length);
+                    }
+
 
                     //if (fillerObject)
                     //    fillerObject.SetActive(false);
@@ -89,6 +156,7 @@ namespace ScrollableLobbyUI
                 {
                     //if (fillerObject)
                     //    fillerObject.SetActive(true);
+                    Debug.Log("isfirst " + IsOnFirstPage + " | is last: " + IsOnLastPage + " | page count: " + PageCount);
 
                     if (previousButtonComponent){
                         previousButtonComponent.gameObject.SetActive(true);
@@ -108,17 +176,25 @@ namespace ScrollableLobbyUI
                     //buttonHolder.transform.SetParent(transform.parent, false);
                     //buttonHolder.transform.SetSiblingIndex(siblingIndex);
                     //(CurrentPageIndex * SurvivorsPerRow) - 1 (15 exclusive) then skip next 14 ((survivorsPerRow - 1) * 2) per (CurrentPageIndex - 1)
-                    var page = (SurvivorsPerRow - 1) * SurvivorRows;
+                    var page = SurvivorsPerPage - 2;
 
                     Debug.Log("first part " + ((SurvivorsPerRow - 1) * SurvivorRows) + " | | " + (survivorDefList.Count - SurvivorsPerPage - 1) + " | " + survivorDefList.Count);
 
+                    Debug.Log("page: " + (((SurvivorsPerPage - 1) + page * (CurrentPageIndex - 1)) + page - survivorDefList.Count));
 
-                    
-                    if(((SurvivorsPerPage - 1) + page * (CurrentPageIndex - 1)) + page - survivorDefList.Count == 1){
+                    var workingCount = survivorDefList.Count;
+                    var equation = ((SurvivorsPerPage - 1) + page * (CurrentPageIndex - 1)) + page - survivorDefList.Count;
+                    if (equation == -1){
                         Debug.Log("Last page perfect!");
+
                         survivorDefs = survivorDefList.Skip((SurvivorsPerPage - 1) + page * (CurrentPageIndex - 1)).Take(SurvivorsPerPage - 1).ToArray();
                     }
-                    else
+                    //else if(equation < -1)
+                    //{
+                    //    survivorDefs = survivorDefList.Skip((SurvivorsPerPage - 1) + page * (CurrentPageIndex - 1)).Take(page).ToArray();
+                    //    IsOnLastPage = false;
+                    //}
+                    else 
                     {
                         Debug.Log("this page isn't perfect!");
                         survivorDefs = survivorDefList.Skip((SurvivorsPerPage - 1) + page * (CurrentPageIndex - 1)).Take(page).ToArray();
@@ -131,12 +207,17 @@ namespace ScrollableLobbyUI
                 }
                 //survivorDefs = survivorDefList.Skip(CurrentPageIndex * (SurvivorsPerPage - 2)).Take(SurvivorsPerPage).ToArray();
 
-                Debug.Log("yeah: " + survivorDefs.Length);
-
-                foreach(var yeah in survivorDefList)
+                foreach (var surv in survivorDefs)
                 {
-                    Debug.Log("survivorDefList: " + yeah.displayNameToken);
+                    Debug.Log("YEAG: " + surv.displayNameToken);
                 }
+
+                //Debug.Log("yeah: " + survivorDefs.Length);
+
+                //foreach(var yeah in survivorDefList)
+                //{
+                //    Debug.Log("survivorDefList: " + yeah.displayNameToken);
+                //}
 
                 //Debug.Log("length of short: " + survivorDefs.Length + " | kength of big: " + survivorDefList.Count);
 
@@ -151,51 +232,41 @@ namespace ScrollableLobbyUI
                 for (int index = 0; index < elements.Count; ++index)
                 {
                     var element = elements[index];
-                    //if (IsOnFirstPage)
-                    //{
-                    //    if(index == elements.Count - 1)
-                    //    {
-                    //        Debug.Log("First page! skipping last");
-                    //        element.gameObject.SetActive(false);
-                    //        continue;
-                    //    }
-                    //    
-                    //}
-                    //else
-                    //{
-                    //    if(index == 0)
-                    //    {
-                    //        Debug.Log("nt first page. skipping first!");
-                    //        element.gameObject.SetActive(false);
-                    //        continue;
-                    //    }
-                    //}
-                    
 
-                    //Component[] components = element.GetComponents(typeof(Component));
-                    //Debug.Log("listing comps of element: " + index);
-                    //for (int i = 0; i < components.Length; i++)
-                    //{
-                    //    Debug.Log(index+ ": " + components[i].GetType());
-                    //}
+                    try
+                    {
+                        Debug.Log("ELEMENT : " + element.survivorDef.displayNameToken);
+                    }
+                    catch
+                    {
+                        Debug.Log("FUCK");
+                    }
 
-                    Debug.Log("slot " + index + " | " + element + " | ");
+
+                    //Debug.Log("slot " + index + " | " + element + " | ");
                     if (index == ((CurrentPageIndex + 1) * SurvivorsPerPage) - 1)
                     {
                         if (IsOnFirstPage)
                         {
-                            Debug.Log("last slot " + index + " | " + element + " | ");
+                            //Debug.Log("last slot " + index + " | " + element + " | ");
+                            if(SurvivorsPerPage == survivorDefList.Count)
+                            {
+                                var survivorDef2 = survivorDefs[index];
+                                element.survivorDef = survivorDef2;
+                                element.gameObject.SetActive(true);
+                                continue;
+                            }
                             element.gameObject.SetActive(false);
                             continue;
                         }
                     }
                     if (index >= survivorDefs.Length)
                     {
-                        Debug.Log(element.GetComponentInChildren<RawImage>().mainTexture.name + " is inactive");
+                        //Debug.Log(element.GetComponentInChildren<RawImage>().mainTexture.name + " is inactive");
                         element.gameObject.SetActive(false);
                         continue;
                     }
-                    Debug.Log(element.GetComponentInChildren<RawImage>().mainTexture.name + " is REAL!");
+
                     Debug.Log(survivorDefs[index].displayNameToken + " FOUND YOU");
                     element.gameObject.SetActive(true);
 
@@ -207,20 +278,20 @@ namespace ScrollableLobbyUI
                         characterSelectBar.pickedIcon = element;
                     }
 
-                    foreach (var fillerIcon in FillerIconControllers.elements)
-                    {
-                        fillerIcon.gameObject.SetActive(IsOnLastPage);
-                    }
 
                 }
 
+                foreach (var fillerIcon in FillerIconControllers.elements)
+                {
+                    fillerIcon.gameObject.SetActive(IsOnLastPage);
+                }
                 //elements[SurvivorsPerPage].survivorDef
 
                 if (nextButtonComponent){
                     nextButtonComponent.transform.SetSiblingIndex(SurvivorsPerPage + 1);
                     nextButtonComponent.transform.Find("ArrowText").GetComponent<RectTransform>().localPosition = new Vector3(0, 2, 0);
                     //nextButtonComponent.colo = colors;
-                    Debug.Log("next button color: " + nextButtonComponent.colors.normalColor);
+                    //Debug.Log("next button color: " + nextButtonComponent.colors.normalColor);
                 }
 
                 if (previousButtonComponent){
@@ -228,33 +299,78 @@ namespace ScrollableLobbyUI
                     previousButtonComponent.transform.Find("ArrowText").GetComponent<RectTransform>().localPosition = new Vector3(-2, 2, 0);
                 }
 
-                Debug.Log("next sib: " + nextButtonComponent.transform.GetSiblingIndex());
-                Debug.Log("prev sib: " + nextButtonComponent.transform.GetSiblingIndex());
+                Debug.Log("yeah 0");
+                if (buttonHistory && buttonHistory.lastRememberedGameObject)
+                {
+                    Debug.Log("yeah 1");
+                    if (EventSystemLocator && EventSystemLocator.eventSystem)
+                    {
+                        Debug.Log("yeah 2");
+                        if (EventSystemLocator.eventSystem.currentInputSource == MPEventSystem.InputSource.Gamepad)
+                        {
+                            Debug.Log("yeah 3");
+                            if (buttonHistory)
+                            {
+                                Debug.Log("yeah 4");
+                                if (buttonHistory.lastRememberedGameObject.activeInHierarchy)
+                                {
+                                    Debug.Log("yeah 5");
+                                    buttonHistory.lastRememberedGameObject.GetComponent<HGButton>().OnSelect(new BaseEventData(EventSystem.current));
+                                }
+                                else
+                                {
+                                    Debug.Log("yeah 6");
+                                    elements.LastOrDefault(el => el.gameObject.activeInHierarchy)?.GetComponent<HGButton>().Select();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(survivorDefList.Count <= SurvivorsPerPage)
+                {
+                    nextButtonComponent.gameObject.SetActive(false);
+                    foreach (var fillerIcon in FillerIconControllers.elements)
+                    {
+                        fillerIcon.gameObject.SetActive(true);
+                    }
+                }
+                
+
+                //Debug.Log("next sib: " + nextButtonComponent.transform.GetSiblingIndex());
+                //Debug.Log("prev sib: " + nextButtonComponent.transform.GetSiblingIndex());
             }
             else
             {
+                Debug.Log("OLD rebuild page called for " + CurrentPageIndex + " | " + SurvivorsPerPage); 
                 var survivorDefs = survivorDefList.Skip(CurrentPageIndex * SurvivorsPerPage).Take(SurvivorsPerPage).ToArray();
                 var elements = SurvivorIconControllers.elements;
 
-                Debug.Log("the j " + elements.Count + " | " + CurrentPageIndex * SurvivorsPerPage + " | ");
+                foreach(var surv in survivorDefs)
+                {
+                    Debug.Log("YEAG: " + surv.displayNameToken);
+                }
 
                 for (var index = 0; index < elements.Count; ++index)
                 {
                     var element = elements[index];
-                    Debug.Log("element " + index + " | " + element + " | ");
-                    if (index == survivorDefs.Length)
+                    try
                     {
-                        Debug.Log("element is 'last' " + index + " | " + element + " | ");
+                        Debug.Log("ELEMENT : " + element.survivorDef.displayNameToken);
                     }
+                    catch
+                    {
+                        Debug.Log("FUCK");
+                    }
+                    
                     if (index >= survivorDefs.Length)
                     {
-                        Debug.Log(element.name + " is inactive");
                         element.gameObject.SetActive(false);
                         continue;
                     }
-                    Debug.Log(element.name + " is REAL!");
 
                     element.gameObject.SetActive(true);
+                    Debug.Log(survivorDefs[index].displayNameToken + " FOUND YOU");
 
                     var survivorDef = survivorDefs[index];
                     element.survivorDef = survivorDef;
@@ -263,6 +379,7 @@ namespace ScrollableLobbyUI
                     {
                         characterSelectBar.pickedIcon = element;
                     }
+                    //Debug.Log(survivorDefs[index].displayNameToken + " FOUND YOU");
                 }
 
                 foreach (var fillerIcon in FillerIconControllers.elements)
@@ -296,7 +413,6 @@ namespace ScrollableLobbyUI
                     nextButtonComponent.interactable = !IsOnLastPage;
                 }
             }
-            
             //previousButtonComponent.interactable = !IsOnFirstPage;
             //nextButtonComponent.interactable = !IsOnLastPage;
         }
@@ -385,9 +501,9 @@ namespace ScrollableLobbyUI
                 previousButtonComponent = SetupPagingButtonCharacterSlot("Previous", "Left", SelectPreviousPage, nameof(RewiredConsts.Action.UITabLeft), 0, 2, mpEventSystemLocator, survivorChoiceGrid, uiLayerKey);
                 nextButtonComponent = SetupPagingButtonCharacterSlot("Next", "Right", SelectNextPage, nameof(RewiredConsts.Action.UITabRight), 10, 6, mpEventSystemLocator, survivorChoiceGrid, uiLayerKey);
 
-                Debug.Log("butttom done color: " + colors.normalColor + " | " + previousButtonComponent.colors.normalColor);
+                //Debug.Log("butttom done color: " + colors.normalColor + " | " + previousButtonComponent.colors.normalColor);
                 //previousButtonComponent.colors = colors;
-                Debug.Log("after butt done color: " + colors.normalColor + " | " + previousButtonComponent.colors.normalColor);
+                //Debug.Log("after butt done color: " + colors.normalColor + " | " + previousButtonComponent.colors.normalColor);
                 //nextButtonComponent.colors = colors;
             }
             
@@ -523,7 +639,7 @@ namespace ScrollableLobbyUI
             rt.sizeDelta = new Vector2(48, 48);
             buttonHolder.AddComponent<CanvasRenderer>();
 
-            Debug.Log("1 loading texUICleanButton");
+            //Debug.Log("1 loading texUICleanButton");
             var img1 = buttonHolder.AddComponent<Image>();
             img1.sprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/UI/texUICleanButton.png").WaitForCompletion();
             img1.overrideSprite = img1.sprite;
@@ -557,7 +673,7 @@ namespace ScrollableLobbyUI
             tgrs.selectedTrigger = "Highlighted";
             tgrs.disabledTrigger = "Disabled";
 
-            Debug.Log("2 loading skinCleanButton");
+            //Debug.Log("2 loading skinCleanButton");
             var bsc = buttonHolder.AddComponent<ButtonSkinController>();
             bsc.useRecommendedImage = true;
             bsc.useRecommendedMaterial = true;
@@ -567,7 +683,7 @@ namespace ScrollableLobbyUI
             bsc.useRecommendedButtonWidth = false;
             bsc.skinData = Addressables.LoadAssetAsync<UISkinData>("RoR2/Base/UI/skinCleanButton.asset").WaitForCompletion();
 
-            Debug.Log("3 ButtonSkinController done");
+            //Debug.Log("3 ButtonSkinController done");
 
             var inter = new GameObject("InteractableHighlight");
             inter.transform.SetParent(buttonHolder.transform, false);
@@ -577,14 +693,14 @@ namespace ScrollableLobbyUI
             rti.sizeDelta = new Vector2(72, 72);
             inter.AddComponent<CanvasRenderer>();
 
-            Debug.Log("4 loading texUIOutlineOnly");
+            //Debug.Log("4 loading texUIOutlineOnly");
             var img2 = inter.AddComponent<Image>();
             img2.sprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/UI/texUIOutlineOnly.png").WaitForCompletion();
             img2.overrideSprite = img2.sprite;
             img2.type = Image.Type.Sliced;
             img2.fillMethod = Image.FillMethod.Radial360;
 
-            Debug.Log("5 InteractableHighlight done");
+            //Debug.Log("5 InteractableHighlight done");
 
             var hover = new GameObject("HoverHighlight");
             hover.transform.SetParent(buttonHolder.transform, false);
@@ -596,14 +712,14 @@ namespace ScrollableLobbyUI
 
             hover.AddComponent<CanvasRenderer>();
 
-            Debug.Log("6 loading highlight box outline");
+            //Debug.Log("6 loading highlight box outline");
             var img3 = hover.AddComponent<Image>();
             img3.sprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/UI/texUIHighlightBoxOutline.png").WaitForCompletion();
             img3.overrideSprite = img3.sprite;
             img3.type = Image.Type.Sliced;
             img3.fillMethod = Image.FillMethod.Radial360;
 
-            Debug.Log("7 HoverHighlight done");
+            //Debug.Log("7 HoverHighlight done");
 
             var text = new GameObject("ArrowText");
             text.transform.SetParent(buttonHolder.transform, false);
@@ -611,16 +727,17 @@ namespace ScrollableLobbyUI
 
             var rtt = text.AddComponent<RectTransform>();
             //rtt.localPosition = new Vector3(rtt.localPosition.x, rtt.localPosition.y + 2, rtt.localPosition.z);
-            Debug.Log("the j " + rtt.localPosition);
+            //Debug.Log("the j " + rtt.localPosition);
 
             text.AddComponent<CanvasRenderer>();
-            Debug.Log("8 doing text");
+
             var stupid = text.AddComponent<HGTextMeshProUGUI>();
             if (prefix == "Next"){
                 stupid.text = ">";
             }else{
                 stupid.text = "<";
             }
+
             stupid.fontSize = 56;
             stupid.fontSizeMin = 55;
             stupid.fontSizeMax = 57;
@@ -632,11 +749,8 @@ namespace ScrollableLobbyUI
             btn.imageOnHover = img3;
             btn.imageOnInteractable = img2;
 
-            
-            //btn.originalColor = new Color(83/255, 103/255, 120/255, 1);
             colors = btn.colors;
             colors.normalColor = new Color(.325f, .404f, .471f, 1); //83, 103, 120, 1
-            //Debug.Log("normal color: " + colors.normalColor + " | " + btn.colors.normalColor);
             colors.highlightedColor = new Color(.989f, 1, .694f, .733f); //252, 255, 177, 187
             colors.pressedColor = new Color(.741f, .753f, .443f, .984f); //189, 192, 113, 251
             colors.selectedColor = new Color(.989f, 1, .694f, .733f); //252, 255, 177, 187
@@ -647,37 +761,6 @@ namespace ScrollableLobbyUI
 
             btn.showImageOnHover = true;
 
-
-            Debug.Log("final color: " + colors.normalColor + " | " + btn.colors.normalColor);
-            Debug.Log("final color: " + colors.highlightedColor + " | " + btn.colors.highlightedColor);
-            //var pageEvent = survivorChoiceGrid.AddComponent<HGGamepadInputEvent>(); 
-            //pageEvent.requiredTopLayer = uiLayerKey;
-            //pageEvent.actionName = actionName;
-            //pageEvent.enabledObjectsIfActive = new GameObject[] { glyph };
-            //pageEvent.actionEvent = new UnityEngine.Events.UnityEvent();
-            //pageEvent.actionEvent.AddListener(new UnityEngine.Events.UnityAction(action));
-            //if (!fillerObject)
-            //{
-            //    fillerObject = new GameObject($"SpecialFiller");
-            //    Debug.Log("created object");
-            //    fillerObject.layer = 5;
-            //    Debug.Log("set lkayer");
-            //    var rtf = fillerObject.AddComponent<RectTransform>();
-            //    rtf.sizeDelta = new Vector2(76.12021f, 70); //that's the actual size i gues??
-            //    Debug.Log("trect stuff");
-            //    fillerObject.AddComponent<CanvasRenderer>();
-            //
-            //
-            //    var imgf = fillerObject.AddComponent<Image>();
-            //    imgf.color = new Color(37, 37, 38, 173);
-            //    imgf.sprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/UI/texUICleanButton.png").WaitForCompletion();
-            //    imgf.type = Image.Type.Sliced;
-            //    imgf.fillMethod = Image.FillMethod.Radial360;
-            //    Debug.Log("imaged");
-            //
-            //    fillerObject.transform.SetParent(transform, false);
-            //}
-
             return btn;
         }
 
@@ -686,11 +769,13 @@ namespace ScrollableLobbyUI
         {
             buttonHistory = GetComponent<HGButtonHistory>();
             characterSelectBar = GetComponent<CharacterSelectBarController>();
+
             characterSelectBar.onSurvivorPicked.AddListener((survivorInfo) => pickedSurvivor = survivorInfo.pickedSurvivor);
-            
+
             PrepareContainer();
             SetupPagingStuff();
             UpdateHeights();
+
         }
 
         private void OnEnable()
@@ -741,6 +826,8 @@ namespace ScrollableLobbyUI
 
                 Build();
             }
+
+            //Debug.Log("pickedSurvivor " + pickedSurvivor + " | ");
         }
 
         private void UpdateHeights()
@@ -760,90 +847,77 @@ namespace ScrollableLobbyUI
             {
                 var survivorMaxCount = survivorDefList.Count;
                 PageCount = survivorMaxCount / SurvivorsPerPage + (survivorMaxCount % SurvivorsPerPage > 0 ? 1 : 0);
-                fillerCount = PageCount * SurvivorsPerPage - survivorMaxCount;
+                //fillerCount = PageCount * SurvivorsPerPage - survivorMaxCount;
+                if (SurvivorsPerPage == 2 && survivorDefList.Count > 2)
+                {
+                    Debug.Log("SPECIAL BUILD! SIZE IS 2");
+                    hasRebuiltOnce = false;
+                }
+                fillerCount = 0;
                 Debug.Log("survivorMaxCount: " + survivorMaxCount);
                 Debug.Log("PageCount: " + PageCount + " | " + survivorMaxCount / SurvivorsPerPage + " | " + (survivorMaxCount % SurvivorsPerPage > 0 ? 1 : 0));
                 Debug.Log("fillercount: " + fillerCount + " | " + PageCount * SurvivorsPerPage + " | " + survivorMaxCount);
+                
 
-
-                if(PageCount > 1 && hasRebuiltOnce)
+                if(hasRebuiltOnce) //PageCount > 1 && hasRebuiltOnce
                 {
-                    
+                    Debug.Log("survivorMaxCount : " + survivorMaxCount);
+                    survivorMaxCount -= (SurvivorsPerPage - 1);
+                    Debug.Log("survivorMaxCount after page 0 : " + survivorMaxCount);
+
+                    //var mod = survivorMaxCount % ((SurvivorsPerRow - 1) * SurvivorRows);
+                    var mod = survivorMaxCount % (SurvivorsPerPage - 2);
+                    Debug.Log("survivorMaxCount mod 14 (number on incomplete last page): " + mod);
+
+                    survivorMaxCount -= mod;
+                    Debug.Log("survivorMaxCoutn after removing mod " + survivorMaxCount);
+
+                    //survivorMaxCount /= ((SurvivorsPerRow - 1) * SurvivorRows);
+                    survivorMaxCount /= (SurvivorsPerPage - 2);
+                    Debug.Log("survivorMaxCount after division (full non page 1 pages): " + survivorMaxCount);
+                    PageCount = 1 + survivorMaxCount + (mod > 1 ? 1 : 0);
+                    Debug.Log("final page count: " + PageCount);
+
                     var workingCount = survivorDefList.Count - (SurvivorsPerPage - 1);
                     var previous = workingCount;
-                    Debug.Log("Count after first: " + workingCount + "{" + (SurvivorsPerPage - 1) + "}");
-                    for (int i = 1; i < PageCount; ++i)
-                    {
-                        previous = workingCount;
-                        workingCount -= ((SurvivorsPerRow - 2) * SurvivorRows);
-                        Debug.Log("wc update " + i + " | " + workingCount);
+                    Debug.Log("Count after first page: " + workingCount + "{" + (SurvivorsPerPage - 1) + "}");
+
+                    if(mod == 1){
+                        fillerCount = 0;
+                    }else if(PageCount > 1){
+                        fillerCount = (SurvivorsPerPage - 1) - mod;
                     }
-                    Debug.Log("final count: " + workingCount);
-                    fillerCount = previous + 1;
+                    else if(survivorDefList.Count <= SurvivorsPerPage)
+                    {
+                        fillerCount = SurvivorsPerPage - survivorDefList.Count;
+                    }
+                    //for (int i = 1; i < PageCount; ++i)
+                    //{
+                    //    previous = workingCount;
+                    //    workingCount -= ((SurvivorsPerRow - 1) * SurvivorRows);
+                    //    Debug.Log("wc update " + i + " | " + workingCount);
+                    //}
+                    //Debug.Log("final count: " + workingCount + " | " + previous);
+                    //if(workingCount == 0){
+                    //    fillerCount = 1;
+                    //}else if(workingCount == 1){
+                    //    fillerCount = 0;
+                    //}else{
+                    //    fillerCount = previous;
+                    //}
+                    //fillerCount = workingCount + 1;
                 }
-                //var workingCount = survivorDefList.Count;
-                //workingCount -= (SurvivorsPerPage - 1);
-                //Debug.Log("yeah: " + workingCount + " after subtraction");
-                //if(survivorDefList.Count <= SurvivorsPerPage){
-                //    PageCount = 1;
-                //    fillerCount = 0;
-                //}
-                //else
-                //{
-                //    PageCount = 0;
-                //    int previous = workingCount;
-                //    //while(workingCount > 0)
-                //    //{
-                //    //    previous = workingCount;
-                //    //    ++PageCount;
-                //    //    workingCount -= (SurvivorsPerPage - 2);
-                //    //    Debug.Log("page: " + PageCount + " | " + workingCount + " | " + survivorDefList.Count);
-                //    //}
-                //
-                //    fillerCount = previous;
-                //    Debug.Log("fillercount: " + fillerCount + " | page: " + PageCount + " | " + workingCount);
-                //}
-                //var containerWidth = (IconContainerGrid.transform.parent.parent.parent as RectTransform).rect.width;
-                //var tempPadding = ScrollableLobbyUIPlugin.PagingVariant.Value ? 0 : iconPadding * 2;
-                //var newSurvivorsPerRow = Math.Max(1, (int)(containerWidth + iconSpacing - tempPadding) / (iconSize + iconSpacing));
-                //
-                //var workingCount = survivorDefList.Count;
-                //
-                //workingCount -= (SurvivorsPerPage - 1);
-                //Debug.Log("working count: " + workingCount + " | " + (SurvivorsPerPage - 1) + " | " + survivorDefList.Count);
-                //if(workingCount < 0)
-                //{
-                //    PageCount = 1;
-                //}
-                //else
-                //{
-                //    PageCount = 0;
-                //    int previous = workingCount;
-                //    while(workingCount > 0)
-                //    {
-                //        ++PageCount;
-                //        previous = workingCount;
-                //        workingCount -= ((newSurvivorsPerRow - 1) * SurvivorRows);
-                //        Debug.Log("working count: " + workingCount + " | mod: " + ((newSurvivorsPerRow - 1) * SurvivorRows) + " | spr: " + newSurvivorsPerRow + " | sr: " + SurvivorRows + " | current page count: " + PageCount);
-                //        Debug.Log("working count: " + workingCount + " | mod: " + ((SurvivorsPerRow - 1) * SurvivorRows) + " | spr: " + SurvivorsPerRow + " | sr: " + SurvivorRows + " | current page count: " + PageCount);
-                //    }
-                //    fillerCount = previous;
-                //}
-                //
-                //Debug.Log("PageCount: " + PageCount + " | ");
-                //Debug.Log("fillercount: " + fillerCount + " | ");
             }
             else
             {
                 var survivorMaxCount = survivorDefList.Count;
                 PageCount = survivorMaxCount / SurvivorsPerPage + (survivorMaxCount % SurvivorsPerPage > 0 ? 1 : 0);
                 fillerCount = PageCount * SurvivorsPerPage - survivorMaxCount;
-                Debug.Log("survivorMaxCount: " + survivorMaxCount);
-                Debug.Log("PageCount: " + PageCount + " | " + survivorMaxCount / SurvivorsPerPage + " | " + (survivorMaxCount % SurvivorsPerPage > 0 ? 1 : 0));
-                Debug.Log("fillercount: " + fillerCount + " | " + PageCount * SurvivorsPerPage + " | " + survivorMaxCount);
             }
 
+            Debug.Log("Unclampped value " + CurrentPageIndex);
             CurrentPageIndex = Mathf.Clamp(CurrentPageIndex, 0, PageCount - 1);
+            Debug.Log("CLAMPED value " + CurrentPageIndex);
             IconContainerGrid.constraintCount = SurvivorsPerRow;
 
             UpdateHeights();
@@ -854,12 +928,14 @@ namespace ScrollableLobbyUI
 
         internal void EnforceValidChoice()
         {
+            
             if ((characterSelectBar.pickedIcon && characterSelectBar.pickedIcon.survivorIsAvailable) || SurvivorIsAvailable(pickedSurvivor))
             {
                 return;
             }
-
+            Debug.Log("Enforce Valid Choice Called");
             var survivorDefIndex = survivorDefList.IndexOf(pickedSurvivor);
+            Debug.Log("Picked survivor: " + pickedSurvivor);
             for (var offset = -1; offset < survivorDefList.Count; offset *= -1)
             {
                 var index = survivorDefIndex + offset;
@@ -911,12 +987,42 @@ namespace ScrollableLobbyUI
         public void OpenPageWithCharacter(SurvivorIndex survivorIndex) => OpenPageWithCharacter(SurvivorCatalog.GetSurvivorDef(survivorIndex));
         public void OpenPageWithCharacter(SurvivorDef survivorDef)
         {
+            Debug.Log("Trying to find " + survivorDef.displayNameToken);
             var index = survivorDefList.FindIndex(el => el == survivorDef);
             if (index == -1)
             {
+                Debug.Log("Returning -1");
                 return;
             }
-            CurrentPageIndex = index / SurvivorsPerPage;
+            else
+            {
+                Debug.Log("Returning " + index);
+            }
+            if(SurvivorsPerPage == 2 || !ScrollableLobbyUIPlugin.PagingVariant.Value)
+            {
+                Debug.Log("size 2 special find scroll " + index);
+                CurrentPageIndex = index / SurvivorsPerPage;
+            }
+            else
+            {
+                var tempIndex = index;
+                Debug.Log("tempindex begin " + tempIndex);
+                if (index < (SurvivorsPerPage - 1))
+                {
+                    CurrentPageIndex = 0;
+                }
+                else
+                {
+                    tempIndex -= (SurvivorsPerPage - 1);
+                    Debug.Log("tempindex after page 1 " + tempIndex);
+                    tempIndex /= (SurvivorsPerPage - 2);
+                    Debug.Log("tempindex after division " + tempIndex + " | otherwise: " + (index / SurvivorsPerPage) + " | (" + PageCount + ")");
+                    CurrentPageIndex = tempIndex + 1; //?
+                    //TODO test this
+                }
+                //CurrentPageIndex = index / SurvivorsPerPage;
+            }
+            //CurrentPageIndex = index / SurvivorsPerPage;
             RebuildPage();
         }
     }
