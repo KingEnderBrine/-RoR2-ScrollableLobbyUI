@@ -445,7 +445,6 @@ namespace ScrollableLobbyUI
         internal static void CharacterSelectBarControllerPickIconBySurvivorDef(On.RoR2.CharacterSelectBarController.orig_PickIconBySurvivorDef orig, RoR2.CharacterSelectBarController self, SurvivorDef survivorDef)
         {
             var extra = self.GetComponent<CharacterSelectBarControllerExtra>();
-            Debug.Log("Pick Icon by Survivor Def Called - " + survivorDef.displayNameToken);
             extra.OpenPageWithCharacter(survivorDef);
             orig(self, survivorDef);
         }
