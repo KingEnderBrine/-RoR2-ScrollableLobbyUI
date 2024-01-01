@@ -28,8 +28,7 @@ namespace ScrollableLobbyUI
         private int ContainerHeight => (iconSize + iconSpacing) * SurvivorRows - iconSpacing + iconPadding * 2;
 
         private bool hasRebuiltOnce = false;
-        private bool controllerActive = false;
-        GameObject fillerObject;
+        private int previousTarget = -1;
 
         private CharacterSelectBarController characterSelectBar;
         private HGButtonHistory buttonHistory;
@@ -761,12 +760,35 @@ namespace ScrollableLobbyUI
             {
                 var previousFirstIconIndex = CurrentPageIndex * SurvivorsPerPage;
                 SurvivorsPerRow = newSurvivorsPerRow;
-                CurrentPageIndex = previousFirstIconIndex / SurvivorsPerPage;
+
+                if (ScrollableLobbyUIPlugin.PagingVariant.Value)
+                {
+                    if(previousTarget != -1)
+                    {
+                        var workingTarget = previousTarget;
+                        if(workingTarget < (SurvivorsPerPage - 1))
+                        {
+                            CurrentPageIndex = 0;
+                        }
+                        else
+                        {
+                            workingTarget -= (SurvivorsPerPage - 1);
+                            workingTarget /= (SurvivorsPerPage - 2);
+                            //Debug.Log("wokring target: " + workingTarget + " | " + previousTarget);
+                            CurrentPageIndex = workingTarget + 1;
+                            previousTarget = -1;
+                        }
+
+                    }
+                }
+                else
+                {
+                    CurrentPageIndex = previousFirstIconIndex / SurvivorsPerPage;
+                }
 
                 Build();
             }
 
-            //Debug.Log("pickedSurvivor " + pickedSurvivor + " | ");
         }
 
         private void UpdateHeights()
@@ -829,6 +851,7 @@ namespace ScrollableLobbyUI
                 fillerCount = PageCount * SurvivorsPerPage - survivorMaxCount;
             }
 
+            //Debug.Log("page index : " + CurrentPageIndex + " | " + PageCount);
             CurrentPageIndex = Mathf.Clamp(CurrentPageIndex, 0, PageCount - 1);
             IconContainerGrid.constraintCount = SurvivorsPerRow;
 
@@ -898,7 +921,9 @@ namespace ScrollableLobbyUI
         public void OpenPageWithCharacter(SurvivorIndex survivorIndex) => OpenPageWithCharacter(SurvivorCatalog.GetSurvivorDef(survivorIndex));
         public void OpenPageWithCharacter(SurvivorDef survivorDef)
         {
+            //Debug.Log("Yeah");
             var index = survivorDefList.FindIndex(el => el == survivorDef);
+            previousTarget = index;
             if (index == -1)
             {
                 return;
@@ -920,8 +945,10 @@ namespace ScrollableLobbyUI
                     tempIndex -= (SurvivorsPerPage - 1);
                     tempIndex /= (SurvivorsPerPage - 2);
                     CurrentPageIndex = tempIndex + 1; //?
+                    //Debug.Log("CurrentPageIndex: " + CurrentPageIndex + " || " + index + " || " + tempIndex);
                 }
             }
+            //Debug.Log("CurrentPageIndex: " + CurrentPageIndex + " || " + index);
             RebuildPage();
         }
 
