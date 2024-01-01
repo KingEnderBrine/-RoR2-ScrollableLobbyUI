@@ -24,6 +24,10 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 Feel free to ping me on discord `@KingEnderBrine` if you found one.
 
 # Changelog
+**1.7.7**
+
+* Added a config option for different scrolling in the character selection screen. (Implemented by `Zenithrium`)
+
 **1.7.6**
 
 * Fixed an issue where having the exact amount of survivors to fit in one page would create 2 pages instead of 1
