@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.ComponentModel;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace ScrollableLobbyUI
@@ -12,6 +13,22 @@ namespace ScrollableLobbyUI
         private ScrollRect scrollRect;
         private RectTransform rectTransform;
 
+        private bool _contentOutOfRect;
+        public bool ContentOutOfRect
+        {
+            get => _contentOutOfRect;
+            set
+            {
+                if (_contentOutOfRect != value)
+                {
+                    _contentOutOfRect = value;
+                    OnContentOutOfRectChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ContentOutOfRect)));
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler OnContentOutOfRectChanged;
+
         private void Awake()
         {
             scrollRect = GetComponent<ScrollRect>();
@@ -20,10 +37,10 @@ namespace ScrollableLobbyUI
 
         private void Update()
         {
-            var contentOutOfRect = rectTransform.rect.width < scrollRect.content.rect.width;
+            ContentOutOfRect = rectTransform.rect.width < scrollRect.content.rect.width;
 
-            left.SetActive(contentOutOfRect && scrollRect.horizontalNormalizedPosition > deadzone);
-            right.SetActive(contentOutOfRect && scrollRect.horizontalNormalizedPosition < 1 - deadzone);
+            left.SetActive(ContentOutOfRect && scrollRect.horizontalNormalizedPosition > deadzone);
+            right.SetActive(ContentOutOfRect && scrollRect.horizontalNormalizedPosition < 1 - deadzone);
 
         }
     }

@@ -259,11 +259,7 @@ namespace ScrollableLobbyUI
             scrollRect.content = buttonContainer;
             scrollRect.scrollSensitivity = -30;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            if (ScrollableLobbyUIPlugin.ScrollVariant.Value) {
-                scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.None;
-            }else{
-                scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyDrag;
-            }
+
             scrollRect.redirectConstrained = rowPanel.GetComponentInParent<ConstrainedScrollRect>();
 
             var scrollPanelRectTransform = scrollPanel.GetComponent<RectTransform>();
@@ -277,22 +273,26 @@ namespace ScrollableLobbyUI
             buttonContainerSizeFilter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             buttonContainer.pivot = new Vector2(0, 0.5F);
+            var buttonContainerImage = buttonContainer.GetComponent<Image>() ?? buttonContainer.gameObject.AddComponent<Image>();
+            buttonContainerImage.enabled = true;
+            buttonContainerImage.color = Color.clear;
 
             buttonContainer.Find("Spacer").gameObject.SetActive(false);
 
             var buttonContainerHorizontalLayout = buttonContainer.GetComponent<HorizontalLayoutGroup>();
             buttonContainerHorizontalLayout.padding = new RectOffset(8, 8, 8, 8);
 
+            var rightButton = SetupButton("Right", scrollPanelRectTransform, MoveDirection.Right, 1);
+            var leftButton = SetupButton("Left", scrollPanelRectTransform, MoveDirection.Left, 0);
 
-            if (!ScrollableLobbyUIPlugin.ScrollVariant.Value)
-            {
-                var rightButton = SetupButton("Right", scrollPanelRectTransform, MoveDirection.Right, 1);
-                var leftButton = SetupButton("Left", scrollPanelRectTransform, MoveDirection.Left, 0);
+            var scrollButtonsController = scrollPanel.AddComponent<ScrollButtonsController>();
+            scrollButtonsController.left = leftButton;
+            scrollButtonsController.right = rightButton;
+            scrollButtonsController.OnContentOutOfRectChanged += (s, e) => OnScrollRowsWithMouseWheelUpdate(null, null);
 
-                var scrollButtonsController = scrollPanel.AddComponent<ScrollButtonsController>();
-                scrollButtonsController.left = leftButton;
-                scrollButtonsController.right = rightButton;
-            }
+            OnScrollRowsWithMouseWheelUpdate(null, null);
+            ScrollableLobbyUIPlugin.ScrollRowsWithMouseWheel.SettingChanged += OnScrollRowsWithMouseWheelUpdate;
+            OnDestroyCallback.AddCallback(scrollPanel, _ => ScrollableLobbyUIPlugin.ScrollRowsWithMouseWheel.SettingChanged -= OnScrollRowsWithMouseWheelUpdate);
 
             GameObject SetupButton(string buttonPrefix, Transform parent, MoveDirection moveDirection, float xNormalized)
             {
@@ -340,6 +340,18 @@ namespace ScrollableLobbyUI
                 scrollButton.SetActive(false);
 
                 return scrollButton;
+            }
+
+            void OnScrollRowsWithMouseWheelUpdate(object sender, EventArgs args)
+            {
+                if (scrollButtonsController.ContentOutOfRect && ScrollableLobbyUIPlugin.ScrollRowsWithMouseWheel.Value)
+                {
+                    scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.None;
+                }
+                else
+                {
+                    scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyDrag;
+                }
             }
         }
 
