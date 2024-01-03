@@ -259,7 +259,11 @@ namespace ScrollableLobbyUI
             scrollRect.content = buttonContainer;
             scrollRect.scrollSensitivity = -30;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyDrag;
+            if (ScrollableLobbyUIPlugin.ScrollVariant.Value) {
+                scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.None;
+            }else{
+                scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyDrag;
+            }
             scrollRect.redirectConstrained = rowPanel.GetComponentInParent<ConstrainedScrollRect>();
 
             var scrollPanelRectTransform = scrollPanel.GetComponent<RectTransform>();
@@ -279,12 +283,16 @@ namespace ScrollableLobbyUI
             var buttonContainerHorizontalLayout = buttonContainer.GetComponent<HorizontalLayoutGroup>();
             buttonContainerHorizontalLayout.padding = new RectOffset(8, 8, 8, 8);
 
-            var rightButton = SetupButton("Right", scrollPanelRectTransform, MoveDirection.Right, 1);
-            var leftButton = SetupButton("Left", scrollPanelRectTransform, MoveDirection.Left, 0);
 
-            var scrollButtonsController = scrollPanel.AddComponent<ScrollButtonsController>();
-            scrollButtonsController.left = leftButton;
-            scrollButtonsController.right = rightButton;
+            if (!ScrollableLobbyUIPlugin.ScrollVariant.Value)
+            {
+                var rightButton = SetupButton("Right", scrollPanelRectTransform, MoveDirection.Right, 1);
+                var leftButton = SetupButton("Left", scrollPanelRectTransform, MoveDirection.Left, 0);
+
+                var scrollButtonsController = scrollPanel.AddComponent<ScrollButtonsController>();
+                scrollButtonsController.left = leftButton;
+                scrollButtonsController.right = rightButton;
+            }
 
             GameObject SetupButton(string buttonPrefix, Transform parent, MoveDirection moveDirection, float xNormalized)
             {
