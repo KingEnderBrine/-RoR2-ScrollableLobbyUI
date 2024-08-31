@@ -1,3 +1,7 @@
+**1.9.0**
+
+* Fixes for `Seekers of the Storm` update.
+
 **1.8.0**
 
 * Added a config options for different scrolling in the character selection screen. (Implemented by `Zenithrium`)

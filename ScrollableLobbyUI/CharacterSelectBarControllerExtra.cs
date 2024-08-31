@@ -319,15 +319,15 @@ namespace ScrollableLobbyUI
                 glyphTMPTransform.localScale = new Vector3(1, 1, 1);
                 glyphTMPTransform.sizeDelta = new Vector2(0, 0);
 
-                var material = new Material(Addressables.LoadAssetAsync<Shader>("TextMesh Pro/TMP_Sprite.shader").WaitForCompletion());
-                var texture = Addressables.LoadAssetAsync<Texture>("TextMesh Pro/texXBoxOneGlyphs.png").WaitForCompletion();
+                var material = new Material(Addressables.LoadAssetAsync<Shader>("TextMesh Pro/FormerResources/Shaders/TMP_Sprite.shader").WaitForCompletion());
+                var texture = Addressables.LoadAssetAsync<Texture>("TextMesh Pro/FormerResources/Sprite Assets/texXBoxOneGlyphs.png").WaitForCompletion();
 
                 var glyphTMPCanvasRenderer = glyphTMP.AddComponent<CanvasRenderer>();
                 glyphTMPCanvasRenderer.SetMaterial(material, texture);
 
                 var glyphTMPSubMesh = glyphTMP.AddComponent<TMP_SubMeshUI>();
                 glyphTMPSubMesh.fontAsset = tmpBombDropShadows;
-                glyphTMPSubMesh.spriteAsset = Addressables.LoadAssetAsync<TMP_SpriteAsset>("TextMesh Pro/tmpsprXboxOneGlyphs.asset").WaitForCompletion();
+                glyphTMPSubMesh.spriteAsset = Addressables.LoadAssetAsync<TMP_SpriteAsset>("TextMesh Pro/FormerResources/Sprite Assets/tmpsprXboxOneGlyphs.asset").WaitForCompletion();
                 glyphTMPSubMesh.m_TextComponent = hgTextMeshPro;
 
                 var pageEvent = survivorChoiceGrid.AddComponent<HGGamepadInputEvent>();
@@ -534,15 +534,15 @@ namespace ScrollableLobbyUI
                 glyphTMPTransform.localScale = new Vector3(1, 1, 1);
                 glyphTMPTransform.sizeDelta = new Vector2(0, 0);
 
-                var material = new Material(Addressables.LoadAssetAsync<Shader>("TextMesh Pro/TMP_Sprite.shader").WaitForCompletion());
-                var texture = Addressables.LoadAssetAsync<Texture>("TextMesh Pro/texXBoxOneGlyphs.png").WaitForCompletion();
+                var material = new Material(Addressables.LoadAssetAsync<Shader>("TextMesh Pro/FormerResources/Shaders/TMP_Sprite.shader").WaitForCompletion());
+                var texture = Addressables.LoadAssetAsync<Texture>("TextMesh Pro/FormerResources/Sprite Assets/texXBoxOneGlyphs.png").WaitForCompletion();
 
                 var glyphTMPCanvasRenderer = glyphTMP.AddComponent<CanvasRenderer>();
                 glyphTMPCanvasRenderer.SetMaterial(material, texture);
 
                 var glyphTMPSubMesh = glyphTMP.AddComponent<TMP_SubMeshUI>();
                 glyphTMPSubMesh.fontAsset = tmpBombDropShadows;
-                glyphTMPSubMesh.spriteAsset = Addressables.LoadAssetAsync<TMP_SpriteAsset>("TextMesh Pro/tmpsprXboxOneGlyphs.asset").WaitForCompletion();
+                glyphTMPSubMesh.spriteAsset = Addressables.LoadAssetAsync<TMP_SpriteAsset>("TextMesh Pro/FormerResources/Sprite Assets/tmpsprXboxOneGlyphs.asset").WaitForCompletion();
                 glyphTMPSubMesh.m_TextComponent = hgTextMeshPro;
 
                 var pageEvent = survivorChoiceGrid.AddComponent<HGGamepadInputEvent>();

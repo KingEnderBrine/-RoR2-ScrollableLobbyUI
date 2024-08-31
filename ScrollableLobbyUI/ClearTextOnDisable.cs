@@ -1,17 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using TMPro;
+using RoR2.UI;
 using UnityEngine;
 
 namespace ScrollableLobbyUI
 {
     public class ClearTextOnDisable : MonoBehaviour
     {
-        public List<TextMeshProUGUI> textObjects;
+        public List<LanguageTextMeshController> textObjects;
 
         private void OnDisable()
         {
-            textObjects?.ForEach(el => el.SetText(String.Empty));
+            if (textObjects is null)
+            {
+                return;
+            }
+
+            foreach (var textObj in textObjects)
+            {
+                if (textObj)
+                {
+                    textObj.token = String.Empty;
+                }
+            }
         }
     }
 }

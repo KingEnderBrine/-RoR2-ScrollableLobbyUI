@@ -119,7 +119,7 @@ namespace ScrollableLobbyUI
                 rect.sizeDelta = new Vector2(0, 0);
 
                 var clearTextOnDisable = panel.transform.GetChild(0).gameObject.AddComponent<ClearTextOnDisable>();
-                clearTextOnDisable.textObjects = new List<TextMeshProUGUI> { descriptionPanel.GetComponent<RoR2.UI.DisableIfTextIsEmpty>().tmpUGUI };
+                clearTextOnDisable.textObjects = new List<LanguageTextMeshController> { descriptionPanel.GetComponentInChildren<LanguageTextMeshController>() };
             }
         }
 
@@ -138,8 +138,9 @@ namespace ScrollableLobbyUI
             var rowRectTransform = self.rowPanelTransform;
             var buttonContainerTransform = self.buttonContainerTransform;
 
-            foreach (var button in self.buttons)
+            foreach (var rowData in self.rowData)
             {
+                var button = rowData.button;
                 //Scroll to selected row if it's not fully visible
                 button.onSelect.AddListener(() =>
                 {
@@ -470,11 +471,10 @@ namespace ScrollableLobbyUI
                 var stripContainer = self.transform.Find("StripContainer");
                 if (stripContainer.gameObject.activeInHierarchy)
                 {
-                    stripContainer.Find("FrameContainer").gameObject.SetActive(false);
-
                     for (var i = 0; i < stripContainer.childCount; i++)
                     {
                         var child = stripContainer.GetChild(i);
+                        child.Find("FrameContainer").gameObject.SetActive(false);
                         if (child.gameObject.activeSelf)
                         {
                             SetupStripPrefab(child);
@@ -535,11 +535,26 @@ namespace ScrollableLobbyUI
             var ruleBookViewerStrip = ruleStrip.GetComponent<RoR2.UI.RuleBookViewerStrip>();
 
             var choiceContainer = ruleStrip.Find("ChoiceContainer");
+            if (!choiceContainer)
+            {
+                return;
+            }
             var fitter = choiceContainer.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.MinSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
-            var scrollRect = ruleStrip.gameObject.AddComponent<ConstrainedScrollRect>();
+            var scrollChoiceContainer = new GameObject("ScrollChoiceContainer");
+            var scrollChoiceTransform = scrollChoiceContainer.AddComponent<RectTransform>();
+            scrollChoiceTransform.SetParent(choiceContainer.parent, false);
+            scrollChoiceTransform.SetSiblingIndex(choiceContainer.GetSiblingIndex());
+
+            var scrollChoiceLayout = scrollChoiceContainer.AddComponent<LayoutElement>();
+            scrollChoiceLayout.preferredWidth = -1;
+            scrollChoiceLayout.preferredHeight = 86;
+
+            choiceContainer.SetParent(scrollChoiceTransform, false);
+
+            var scrollRect = scrollChoiceContainer.AddComponent<ConstrainedScrollRect>();
             scrollRect.horizontal = true;
             scrollRect.vertical = false;
             scrollRect.scrollConstraint = ConstrainedScrollRect.Constraint.OnlyDrag;
