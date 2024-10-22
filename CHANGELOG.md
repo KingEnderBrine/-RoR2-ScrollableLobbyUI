@@ -1,3 +1,7 @@
+**1.9.1**
+
+* Added a config option for skills/skins row height.
+
 **1.9.0**
 
 * Fixes for `Seekers of the Storm` update.

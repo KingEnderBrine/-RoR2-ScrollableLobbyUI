@@ -16,10 +16,13 @@ namespace ScrollableLobbyUI
 {
     internal static class UIHooks
     {
-        //Full panel width ~ 310, choice witdh 64, left offset 12, padding 6, padding 12
+        //Full panel width ~ 310, choice width 64, left offset 12, padding 6, padding 12
         private const int ruleFillerWidth = 87;
         private const int ruleFillerHeight = 64;
         private const float ruleScrollDuration = 0.1F;
+        private const float skillRowDefaultHeight = 96;
+        private const float skillIconDefaultHeight = 76;
+        private const float skillHighlightDefaultHeight = 64;
 
         private static readonly List<RoR2.UI.HGButton> buttonsWithListeners = new List<RoR2.UI.HGButton>();
 
@@ -193,6 +196,37 @@ namespace ScrollableLobbyUI
                             buttonsContentPanel.anchoredPosition.y);
                     }
                 });
+
+                var buttonLayout = button.GetComponent<LayoutElement>();
+                buttonLayout.minHeight = 8;
+                buttonLayout.minWidth = 8;
+
+                var skillRowHeight = ScrollableLobbyUIPlugin.SkillRowHeight.Value;
+                var highlight = button.transform.Find("ButtonSelectionHighlight, Checkbox");
+                if (highlight)
+                {
+                    var highlightRect = highlight.GetComponent<RectTransform>();
+                    OnSkillRowHeightChangedHighlight(null, null);
+                    ScrollableLobbyUIPlugin.SkillRowHeight.SettingChanged += OnSkillRowHeightChangedHighlight;
+                    OnDestroyCallback.AddCallback(buttonLayout.gameObject, _ => ScrollableLobbyUIPlugin.SkillRowHeight.SettingChanged -= OnSkillRowHeightChangedHighlight);
+                    void OnSkillRowHeightChangedHighlight(object sender, EventArgs eventArgs)
+                    {
+                        var ratio = ScrollableLobbyUIPlugin.SkillRowHeight.Value / skillRowDefaultHeight;
+                        var size = ratio * skillHighlightDefaultHeight;
+                        highlightRect.sizeDelta = new Vector2(size, size);
+                    }
+                }
+
+                OnSkillRowHeightChanged(null, null);
+                ScrollableLobbyUIPlugin.SkillRowHeight.SettingChanged += OnSkillRowHeightChanged;
+                OnDestroyCallback.AddCallback(buttonLayout.gameObject, _ => ScrollableLobbyUIPlugin.SkillRowHeight.SettingChanged -= OnSkillRowHeightChanged);
+                void OnSkillRowHeightChanged(object sender, EventArgs eventArgs)
+                {
+                    var ratio = ScrollableLobbyUIPlugin.SkillRowHeight.Value / skillRowDefaultHeight;
+                    var size = ratio * skillIconDefaultHeight;
+                    buttonLayout.preferredHeight = size;
+                    buttonLayout.preferredWidth = size;
+                }
             }
         }
 
@@ -209,6 +243,15 @@ namespace ScrollableLobbyUI
 
             var buttonContainer = self.buttonContainerTransform;
             var rowPanel = self.rowPanelTransform;
+
+            var rowPanelLayout = rowPanel.GetComponent<LayoutElement>();
+            OnSkillRowHeightChanged(null, null);
+            ScrollableLobbyUIPlugin.SkillRowHeight.SettingChanged += OnSkillRowHeightChanged;
+            OnDestroyCallback.AddCallback(rowPanel.gameObject, _ => ScrollableLobbyUIPlugin.SkillRowHeight.SettingChanged -= OnSkillRowHeightChanged);
+            void OnSkillRowHeightChanged(object sender, EventArgs eventArgs)
+            {
+                rowPanelLayout.preferredHeight = ScrollableLobbyUIPlugin.SkillRowHeight.Value;
+            }
 
             var rowHorizontalLayout = rowPanel.gameObject.AddComponent<HorizontalLayoutGroup>();
 

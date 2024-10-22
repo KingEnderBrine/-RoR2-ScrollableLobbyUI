@@ -32,6 +32,7 @@ namespace ScrollableLobbyUI
                         new IntConfigField(ScrollableLobbyUIPlugin.CharacterSelectRows.Definition.Key, ScrollableLobbyUIPlugin.CharacterSelectRows.Description.Description, () => ScrollableLobbyUIPlugin.CharacterSelectRows.Value, null, (newValue) => ScrollableLobbyUIPlugin.CharacterSelectRows.Value = newValue, 1, 50),
                         new BooleanConfigField(ScrollableLobbyUIPlugin.InlinePageArrows.Definition.Key, ScrollableLobbyUIPlugin.InlinePageArrows.Description.Description, () => ScrollableLobbyUIPlugin.InlinePageArrows.Value, (newValue) => ScrollableLobbyUIPlugin.InlinePageArrows.Value = newValue),
                         new BooleanConfigField(ScrollableLobbyUIPlugin.ScrollRowsWithMouseWheel.Definition.Key, ScrollableLobbyUIPlugin.ScrollRowsWithMouseWheel.Description.Description, () => ScrollableLobbyUIPlugin.ScrollRowsWithMouseWheel.Value, (newValue) => ScrollableLobbyUIPlugin.ScrollRowsWithMouseWheel.Value = newValue),
+                        new IntConfigField(ScrollableLobbyUIPlugin.SkillRowHeight.Definition.Key, ScrollableLobbyUIPlugin.SkillRowHeight.Description.Description, () => ScrollableLobbyUIPlugin.SkillRowHeight.Value, null, (newValue) => ScrollableLobbyUIPlugin.SkillRowHeight.Value = newValue, 1, 320),
                     }
                 }
             };

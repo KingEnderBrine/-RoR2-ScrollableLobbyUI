@@ -12,17 +12,19 @@ namespace ScrollableLobbyUI
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.9.0";
+        public const string Version = "1.9.1";
 
         internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
         internal static ConfigEntry<bool> InlinePageArrows { get; private set; }
         internal static ConfigEntry<bool> ScrollRowsWithMouseWheel { get; private set; }
+        internal static ConfigEntry<int> SkillRowHeight { get; private set; }
 
         private void Awake()
         {
             CharacterSelectRows = Config.Bind("Main", "CharacterSelectRows", 2, new ConfigDescription("The amount of rows that should be displayed in character select screen", new AcceptableValueRange<int>(1, 50)));
             InlinePageArrows = Config.Bind("Main", "CharacterPageArrowsInline", false, new ConfigDescription("Sets if the arrows should be placed to the side of the character list (false) or if they should be placed in a survivor square (true)."));
             ScrollRowsWithMouseWheel = Config.Bind("Main", "SkillsSkinsWheelScrolling", false, new ConfigDescription("Sets if rows of skills or skins with too many entries should be scrollable with mouse wheel."));
+            SkillRowHeight = Config.Bind("Main", "SkillsSkinsRowHeight", 96, new ConfigDescription("The height of a single skill/skin row.", new AcceptableValueRange<int>(1, 320)));
 
             //Editing skills overview UI to prevent auto resizing and add scrolling
             IL.RoR2.UI.CharacterSelectController.RebuildLocal += UIHooks.CharacterSelectControllerRebuildLocal;
