@@ -360,6 +360,7 @@ namespace ScrollableLobbyUI
                 var button = buttonHolder.AddComponent<HGButton>();
                 button.image = holderImage;
                 button.targetGraphic = holderImage;
+                button.requiredTopLayer = uiLayerKey;
 
                 button.onClick = new Button.ButtonClickedEvent();
                 button.onClick.AddListener(new UnityEngine.Events.UnityAction(action));

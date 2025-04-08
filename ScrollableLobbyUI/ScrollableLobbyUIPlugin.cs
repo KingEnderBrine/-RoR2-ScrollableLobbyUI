@@ -12,12 +12,13 @@ namespace ScrollableLobbyUI
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.9.1";
+        public const string Version = "1.10.0";
 
         internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
         internal static ConfigEntry<bool> InlinePageArrows { get; private set; }
         internal static ConfigEntry<bool> ScrollRowsWithMouseWheel { get; private set; }
         internal static ConfigEntry<int> SkillRowHeight { get; private set; }
+        internal static ConfigEntry<int> SkillCountForGridButton { get; private set; }
 
         private void Awake()
         {
@@ -25,9 +26,11 @@ namespace ScrollableLobbyUI
             InlinePageArrows = Config.Bind("Main", "CharacterPageArrowsInline", false, new ConfigDescription("Sets if the arrows should be placed to the side of the character list (false) or if they should be placed in a survivor square (true)."));
             ScrollRowsWithMouseWheel = Config.Bind("Main", "SkillsSkinsWheelScrolling", false, new ConfigDescription("Sets if rows of skills or skins with too many entries should be scrollable with mouse wheel."));
             SkillRowHeight = Config.Bind("Main", "SkillsSkinsRowHeight", 96, new ConfigDescription("The height of a single skill/skin row.", new AcceptableValueRange<int>(1, 320)));
+            SkillCountForGridButton = Config.Bind("Main", "SkillCountForGridButton", 10, new ConfigDescription("The amount of skill/skin buttons in a row to show the button that opens a row as a grid for easier selection.", new AcceptableValueRange<int>(1, int.MaxValue)));
 
             //Editing skills overview UI to prevent auto resizing and add scrolling
             IL.RoR2.UI.CharacterSelectController.RebuildLocal += UIHooks.CharacterSelectControllerRebuildLocal;
+            On.RoR2.UI.CharacterSelectController.Awake += UIHooks.CharacterSelectControllerAwake;
 
             //Editing lobby UI to add scrolling for skill and loadout
             On.RoR2.UI.LoadoutPanelController.Awake += UIHooks.LoadoutPanelControllerAwake;

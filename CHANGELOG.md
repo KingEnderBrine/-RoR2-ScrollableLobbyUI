@@ -1,3 +1,8 @@
+**1.10.0**
+
+* Added a button for rows in loadout that opens up all skills/skins in a grid for easier selection.
+* Added a config option for the amount of skill/skins needed to show a button to open grid view.
+
 **1.9.1**
 
 * Added a config option for skills/skins row height.

@@ -32,12 +32,6 @@ namespace ScrollableLobbyUI
 
             var uiLayerKey = self.GetComponentInParent<RoR2.UI.UILayerKey>();
 
-            //Disabling buttons navigation if selected right panel,
-            //so extremely long rows in loadout will not interfere in artifacts selection
-            var loadoutHelper = uiLayerKey.gameObject.AddComponent<ButtonsNavigationController>();
-            loadoutHelper.requiredTopLayer = uiLayerKey;
-            loadoutHelper.loadoutPanel = self;
-
             //Adding container on top of LoadoutPanelController
             var loadoutScrollPanel = AddScrollPanel(self.transform, "LoadoutScrollPanel");
             //Adding container on top of SkillPanel
@@ -141,9 +135,14 @@ namespace ScrollableLobbyUI
             var rowRectTransform = self.rowPanelTransform;
             var buttonContainerTransform = self.buttonContainerTransform;
 
+            var rowInfo = self.rowPanelTransform.gameObject.AddComponent<LoadoutRowInfo>();
+            rowInfo.row = self;
+
             foreach (var rowData in self.rowData)
             {
                 var button = rowData.button;
+                var info = button.gameObject.AddComponent<LoadoutButtonInfo>();
+                info.row = rowInfo;
                 //Scroll to selected row if it's not fully visible
                 button.onSelect.AddListener(() =>
                 {
@@ -805,6 +804,24 @@ namespace ScrollableLobbyUI
             }
 
             selectedHighlight.gameObject.SetActive(active);
+        }
+
+        internal static void CharacterSelectControllerAwake(On.RoR2.UI.CharacterSelectController.orig_Awake orig, RoR2.UI.CharacterSelectController self)
+        {
+            orig(self);
+
+            var contentPanel = self.activeSurvivorInfoPanel.transform.Find("ContentPanel (Overview, Skills, Loadout)");
+            var skillGrid = new GameObject("RowSkillGrid");
+            skillGrid.transform.SetParent(contentPanel.transform, false);
+
+            var rect = skillGrid.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0, 0);
+            rect.anchorMax = new Vector2(1, 1);
+            rect.sizeDelta = new Vector2(0, 0);
+            rect.pivot = new Vector2(0.5f, 1);
+
+            var controller = skillGrid.AddComponent<LoadoutSkillGridController>();
+            controller.infoPanel = self.activeSurvivorInfoPanel;
         }
     }
 }
