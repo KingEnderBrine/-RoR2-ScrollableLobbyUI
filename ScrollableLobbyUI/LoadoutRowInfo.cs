@@ -40,6 +40,8 @@ namespace ScrollableLobbyUI
             skillListButtonRect.pivot = new Vector2(0, 0.5F);
             skillListButtonRect.sizeDelta = new Vector2(20, 0);
 
+            skillGrid.AddComponent<RectMask2D>();
+
             var verticalLayout = skillGrid.AddComponent<VerticalLayoutGroup>();
             verticalLayout.padding = new RectOffset(4, 0, 8, 8);
             verticalLayout.spacing = 8;

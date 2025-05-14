@@ -1,3 +1,8 @@
+**1.10.1**
+
+* Fixed an issue where selecting skills/skins in a grid view would highlight wrong cell.
+* Fixed grid view button extending past its boundaries.
+
 **1.10.0**
 
 * Added a button for rows in loadout that opens up all skills/skins in a grid for easier selection.

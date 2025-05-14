@@ -9,5 +9,6 @@ namespace ScrollableLobbyUI
     public class SkillGridButton : MonoBehaviour
     {
         public HGButton button;
+        public int defIndex;
     }
 }

@@ -265,8 +265,13 @@ namespace ScrollableLobbyUI
             scrollPanel.GetComponent<ScrollRect>().verticalNormalizedPosition = 1;
             for (var i = 0; i < buttons.elements.Count; i++)
             {
-                var button = buttons.elements[i].button;
-                var sourceButton = self.rowData[i].button as HGButton;
+                var rowData = self.rowData[i];
+                var element = buttons.elements[i];
+                element.defIndex = rowData.defIndex;
+
+                var button = element.button;
+                var sourceButton = rowData.button as HGButton;
+
                 button.requiredTopLayer = layer;
                 (button.targetGraphic as Image).sprite = (sourceButton.targetGraphic as Image).sprite;
                 button.interactable = sourceButton.interactable;
@@ -371,22 +376,21 @@ namespace ScrollableLobbyUI
 
 		private void UpdateHighlightedChoice()
 		{
+			var num = currentRow.findCurrentChoice(currentRow.userProfile.loadout);
             foreach (var button in buttons.elements)
             {
-				var colors = button.button.colors;
-				colors.colorMultiplier = 0.5f;
-				button.button.colors = colors;
-            }
-
-			int num = currentRow.findCurrentChoice(currentRow.userProfile.loadout);
-            if (num != -1)
-            {
-                var button = buttons.elements[num];
-				var colors = button.button.colors;
-				colors.colorMultiplier = 1f;
-				button.button.colors = colors;
-                button.button.onSelect.Invoke();
-                choiceHighlightRect.SetParent(button.transform, false);
+                var colors = button.button.colors;
+                if (num == button.defIndex)
+                {
+                    colors.colorMultiplier = 1f;
+                    button.button.onSelect.Invoke();
+                    choiceHighlightRect.SetParent(button.transform, false);
+                }
+                else
+                {
+                    colors.colorMultiplier = 0.5f;
+                }
+                button.button.colors = colors;
             }
 		}
 
