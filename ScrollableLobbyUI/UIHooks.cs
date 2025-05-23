@@ -126,10 +126,8 @@ namespace ScrollableLobbyUI
             buttonsWithListeners.Clear();
         }
 
-        internal static void LoadoutPanelControllerRowFinishSetup(On.RoR2.UI.LoadoutPanelController.Row.orig_FinishSetup orig, object selfObject, bool addWIPIcons)
+        internal static void LoadoutPanelControllerRowFinishSetup(On.RoR2.UI.LoadoutPanelController.Row.orig_FinishSetup orig, LoadoutPanelController.Row self, bool addWIPIcons)
         {
-            var self = selfObject as RoR2.UI.LoadoutPanelController.Row;
-
             orig(self, addWIPIcons);
 
             var rowRectTransform = self.rowPanelTransform;
@@ -229,10 +227,8 @@ namespace ScrollableLobbyUI
             }
         }
 
-        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, object selfObject, RoR2.UI.LoadoutPanelController owner, BodyIndex bodyIndex, string titleToken)
+        internal static void LoadoutPanelControllerRowCtor(On.RoR2.UI.LoadoutPanelController.Row.orig_ctor orig, LoadoutPanelController.Row self, RoR2.UI.LoadoutPanelController owner, BodyIndex bodyIndex, string titleToken)
         {
-            var self = selfObject as RoR2.UI.LoadoutPanelController.Row;
-            
             orig(self, owner, bodyIndex, titleToken);
 
             //Disabling sorting override because it not work with mask

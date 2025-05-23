@@ -1,3 +1,7 @@
+**1.10.2**
+
+* Fixes for new `HookGenPatcher` version
+
 **1.10.1**
 
 * Fixed an issue where selecting skills/skins in a grid view would highlight wrong cell.
