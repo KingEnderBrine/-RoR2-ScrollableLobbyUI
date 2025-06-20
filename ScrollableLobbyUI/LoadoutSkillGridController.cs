@@ -230,19 +230,31 @@ namespace ScrollableLobbyUI
 
         public void Hide()
         {
+            if (!scrollPanel.activeSelf)
+            {
+                return;
+            }
+
             scrollPanel.SetActive(false);
             if (locator.eventSystem && locator.eventSystem.currentInputSource == MPEventSystem.InputSource.Gamepad)
             {
                 if (currentButton)
                 {
-                    locator.eventSystem.SetSelectedGameObject(currentButton.gameObject);
-                    currentButton.GetComponent<HGButton>().OnSelect(null);
+                    var hgButton = currentButton.GetComponent<HGButton>();
+                    if (hgButton)
+                    {
+                        locator.eventSystem.SetSelectedGameObject(currentButton.gameObject);
+                        hgButton.OnSelect(null);
+                    }
                 }
                 else
                 {
                     var button = currentRow.rowData[0].button;
-                    locator.eventSystem.SetSelectedGameObject(button.gameObject);
-                    button.OnSelect(null);
+                    if (button)
+                    {
+                        locator.eventSystem.SetSelectedGameObject(button.gameObject);
+                        button.OnSelect(null);
+                    }
                 }
             }
             currentRow = null;

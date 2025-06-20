@@ -1,3 +1,7 @@
+**1.10.4**
+
+* Fix some potential NREs.
+
 **1.10.3**
 
 * Undo `1.10.2` since `HookGenPatcher` was fixed and updated cased breaking change for `SkinTuner`.

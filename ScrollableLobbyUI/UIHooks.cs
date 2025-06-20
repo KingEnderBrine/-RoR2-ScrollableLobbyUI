@@ -147,6 +147,11 @@ namespace ScrollableLobbyUI
                 button.onSelect.AddListener(() =>
                 {
                     var buttonsScrollRect = button.GetComponentInParent<ConstrainedScrollRect>();
+                    if (!buttonsScrollRect)
+                    {
+                        return;
+                    }
+
                     var rowsScrollRect = buttonsScrollRect.redirectConstrained;
                     var eventSystemLocator = rowsScrollRect.GetComponent<RoR2.UI.MPEventSystemLocator>();
 

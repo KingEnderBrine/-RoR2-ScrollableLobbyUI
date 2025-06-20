@@ -12,7 +12,7 @@ namespace ScrollableLobbyUI
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.10.3";
+        public const string Version = "1.10.4";
 
         internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
         internal static ConfigEntry<bool> InlinePageArrows { get; private set; }
