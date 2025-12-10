@@ -12,9 +12,10 @@ namespace ScrollableLobbyUI
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.10.4";
+        public const string Version = "1.10.5";
 
         internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
+        internal static ConfigEntry<int> CharacterIconSize { get; private set; }
         internal static ConfigEntry<bool> InlinePageArrows { get; private set; }
         internal static ConfigEntry<bool> ScrollRowsWithMouseWheel { get; private set; }
         internal static ConfigEntry<int> SkillRowHeight { get; private set; }
@@ -22,7 +23,8 @@ namespace ScrollableLobbyUI
 
         private void Awake()
         {
-            CharacterSelectRows = Config.Bind("Main", "CharacterSelectRows", 2, new ConfigDescription("The amount of rows that should be displayed in character select screen", new AcceptableValueRange<int>(1, 50)));
+            CharacterSelectRows = Config.Bind("Main", "CharacterSelectRows", 3, new ConfigDescription("The amount of rows that should be displayed in character select screen.", new AcceptableValueRange<int>(1, 50)));
+            CharacterIconSize = Config.Bind("Main", "CharacterIconSize", 70, new ConfigDescription("The size of a single character icon.", new AcceptableValueRange<int>(1, 500)));
             InlinePageArrows = Config.Bind("Main", "CharacterPageArrowsInline", false, new ConfigDescription("Sets if the arrows should be placed to the side of the character list (false) or if they should be placed in a survivor square (true)."));
             ScrollRowsWithMouseWheel = Config.Bind("Main", "SkillsSkinsWheelScrolling", false, new ConfigDescription("Sets if rows of skills or skins with too many entries should be scrollable with mouse wheel."));
             SkillRowHeight = Config.Bind("Main", "SkillsSkinsRowHeight", 96, new ConfigDescription("The height of a single skill/skin row.", new AcceptableValueRange<int>(1, 320)));
@@ -33,6 +35,10 @@ namespace ScrollableLobbyUI
             On.RoR2.UI.CharacterSelectController.Awake += UIHooks.CharacterSelectControllerAwake;
 
             //Editing lobby UI to add scrolling for skill and loadout
+            On.RoR2.UI.LoadoutPanelController.Rebuild += (orig, self) =>
+            {
+                orig(self);
+            };
             On.RoR2.UI.LoadoutPanelController.Awake += UIHooks.LoadoutPanelControllerAwake;
             On.RoR2.UI.LoadoutPanelController.Row.ctor += UIHooks.LoadoutPanelControllerRowCtor;
             On.RoR2.UI.LoadoutPanelController.Row.FinishSetup += UIHooks.LoadoutPanelControllerRowFinishSetup;

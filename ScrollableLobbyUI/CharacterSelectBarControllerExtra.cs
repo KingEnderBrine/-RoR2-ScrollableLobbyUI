@@ -16,7 +16,6 @@ namespace ScrollableLobbyUI
     [RequireComponent(typeof(CharacterSelectBarController))]
     public class CharacterSelectBarControllerExtra : MonoBehaviour
     {
-        private const int iconSize = 70;
         private const int iconSpacing = 4;
         private const int iconPadding = 6;
         private const int buttonSide = 37;
@@ -30,7 +29,7 @@ namespace ScrollableLobbyUI
                 _ => 1
             };
         private int SurvivorsPerPage => SurvivorsPerRow * SurvivorRows;
-        private int ContainerHeight => (iconSize + iconSpacing) * SurvivorRows - iconSpacing + iconPadding * 2;
+        private int ContainerHeight => (ScrollableLobbyUIPlugin.CharacterIconSize.Value + iconSpacing) * SurvivorRows - iconSpacing + iconPadding * 2;
 
         private CharacterSelectBarController characterSelectBar;
         private HGButtonHistory buttonHistory;
@@ -187,7 +186,7 @@ namespace ScrollableLobbyUI
             trackingHeightElements.Add(choiceGridLayout);
 
             //Define cell size (previous value: (-5, 70))
-            IconContainerGrid.cellSize = new Vector2(iconSize, iconSize);
+            IconContainerGrid.cellSize = new Vector2(ScrollableLobbyUIPlugin.CharacterIconSize.Value, ScrollableLobbyUIPlugin.CharacterIconSize.Value);
             IconContainerGrid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             IconContainerGrid.childAlignment = TextAnchor.MiddleCenter;
 
@@ -576,12 +575,14 @@ namespace ScrollableLobbyUI
         private void OnEnable()
         {
             ScrollableLobbyUIPlugin.CharacterSelectRows.SettingChanged += OnCharacterSelectRowsSettingsChanged;
+            ScrollableLobbyUIPlugin.CharacterIconSize.SettingChanged += CharacterIconSizeSettingChanged;
             ScrollableLobbyUIPlugin.InlinePageArrows.SettingChanged += OnInlinePageArrowsSettingsChanged;
         }
 
         private void OnDisable()
         {
             ScrollableLobbyUIPlugin.CharacterSelectRows.SettingChanged -= OnCharacterSelectRowsSettingsChanged;
+            ScrollableLobbyUIPlugin.CharacterIconSize.SettingChanged -= CharacterIconSizeSettingChanged;
             ScrollableLobbyUIPlugin.InlinePageArrows.SettingChanged -= OnInlinePageArrowsSettingsChanged;
         }
 
@@ -601,6 +602,12 @@ namespace ScrollableLobbyUI
             }
 
             Build();
+        }
+
+        private void CharacterIconSizeSettingChanged(object sender, EventArgs e)
+        {
+            IconContainerGrid.cellSize = new Vector2(ScrollableLobbyUIPlugin.CharacterIconSize.Value, ScrollableLobbyUIPlugin.CharacterIconSize.Value);
+            UpdateHeights();
         }
 
         private void OnInlinePageArrowsSettingsChanged(object sender, EventArgs e)
@@ -632,7 +639,10 @@ namespace ScrollableLobbyUI
         {
             var containerWidth = (IconContainerGrid.transform.parent.parent.parent as RectTransform).rect.width;
             var tempPadding = ScrollableLobbyUIPlugin.InlinePageArrows.Value ? 0 : iconPadding * 2;
-            var newSurvivorsPerRow = Math.Max(1, (int)(containerWidth + iconSpacing - tempPadding) / (iconSize + iconSpacing));
+            var totalWidth = (int)(containerWidth + iconSpacing - tempPadding);
+            var cellSize = (ScrollableLobbyUIPlugin.CharacterIconSize.Value + iconSpacing);
+            var remainder = totalWidth % cellSize;
+            var newSurvivorsPerRow = Math.Max(1, totalWidth / cellSize);
 
             if (!ScrollableLobbyUIPlugin.InlinePageArrows.Value)
             {
@@ -640,7 +650,7 @@ namespace ScrollableLobbyUI
                 {
                     arrowPreviousButtonComponent.transform.parent.gameObject.SetActive(true);
                     arrowNextButtonComponent.transform.parent.gameObject.SetActive(true);
-                    newSurvivorsPerRow = Math.Max(1, newSurvivorsPerRow - 1);
+                    newSurvivorsPerRow = Math.Max(1, newSurvivorsPerRow - Mathf.CeilToInt((buttonSide * 2f - remainder) / (ScrollableLobbyUIPlugin.CharacterIconSize.Value + iconSpacing)));
                 }
                 else
                 {

@@ -22,7 +22,8 @@ Adds scrolling to skills overview, loadout, characters select and difficulty sel
 
 # Config options
 
-* `CharacterSelectRows` - The amount of rows that should be displayed in character select screen
+* `CharacterSelectRows` - The amount of rows that should be displayed in character select screen.
+* `CharacterIconSize` - The size of a single character icon.
 * `CharacterPageArrowsInline` - Sets if the arrows should be placed to the side of the character list (false) or if they should be placed in a survivor square (true).
 * `SkillsSkinsWheelScrolling` - Sets if rows of skills or skins with too many entries should be scrollable with mouse wheel.
 * `SkillsSkinsRowHeight` - The height of a single skill/skin row.

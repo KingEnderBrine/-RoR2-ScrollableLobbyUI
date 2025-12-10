@@ -1,3 +1,7 @@
+**1.10.5**
+
+* Added a config option to change character icons size.
+
 **1.10.4**
 
 * Fix some potential NREs.
