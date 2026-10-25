@@ -516,16 +516,13 @@ namespace ScrollableLobbyUI
             if (self.ruleCategoryType == RuleCatalog.RuleCategoryType.StripVote)
             {
                 var stripContainer = self.transform.Find("StripContainer");
-                if (stripContainer.gameObject.activeInHierarchy)
+                for (var i = 0; i < stripContainer.childCount; i++)
                 {
-                    for (var i = 0; i < stripContainer.childCount; i++)
+                    var child = stripContainer.GetChild(i);
+                    child.Find("FrameContainer").gameObject.SetActive(false);
+                    if (child.gameObject.activeSelf)
                     {
-                        var child = stripContainer.GetChild(i);
-                        child.Find("FrameContainer").gameObject.SetActive(false);
-                        if (child.gameObject.activeSelf)
-                        {
-                            SetupStripPrefab(child);
-                        }
+                        SetupStripPrefab(child);
                     }
                 }
             }
@@ -574,7 +571,7 @@ namespace ScrollableLobbyUI
 
         private static void SetupStripPrefab(Transform ruleStrip)
         {
-            if (ruleStrip.GetComponent<ConstrainedScrollRect>())
+            if (ruleStrip.Find("ScrollChoiceContainer"))
             {
                 return;
             }

@@ -12,7 +12,7 @@ namespace ScrollableLobbyUI
     {
         public const string GUID = "com.KingEnderBrine.ScrollableLobbyUI";
         public const string Name = "Scrollable lobby UI";
-        public const string Version = "1.10.5";
+        public const string Version = "1.10.6";
 
         internal static ConfigEntry<int> CharacterSelectRows { get; private set; }
         internal static ConfigEntry<int> CharacterIconSize { get; private set; }
@@ -35,10 +35,6 @@ namespace ScrollableLobbyUI
             On.RoR2.UI.CharacterSelectController.Awake += UIHooks.CharacterSelectControllerAwake;
 
             //Editing lobby UI to add scrolling for skill and loadout
-            On.RoR2.UI.LoadoutPanelController.Rebuild += (orig, self) =>
-            {
-                orig(self);
-            };
             On.RoR2.UI.LoadoutPanelController.Awake += UIHooks.LoadoutPanelControllerAwake;
             On.RoR2.UI.LoadoutPanelController.Row.ctor += UIHooks.LoadoutPanelControllerRowCtor;
             On.RoR2.UI.LoadoutPanelController.Row.FinishSetup += UIHooks.LoadoutPanelControllerRowFinishSetup;
