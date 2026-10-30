@@ -613,7 +613,8 @@ namespace ScrollableLobbyUI
             CreateFiller("LeftFiller", choiceContainer).transform.SetAsFirstSibling();
             CreateFiller("RightFiller", choiceContainer).transform.SetAsLastSibling();
 
-            ruleBookViewerStrip.StartCoroutine(RuleScrollStartDelayCoroutine(ruleBookViewerStrip));
+            var onStart = ruleBookViewerStrip.gameObject.AddComponent<CoroutineOnStart>();
+            onStart.coroutine = RuleScrollStartDelayCoroutine(ruleBookViewerStrip);
         }
 
         private static IEnumerator RuleScrollStartDelayCoroutine(RoR2.UI.RuleBookViewerStrip ruleBookViewerStrip)

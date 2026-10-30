@@ -1,3 +1,6 @@
+**1.10.7**
+* Fixed an issue where difficulty selection wouldn't scroll to correct position when entering lobby.
+
 **1.10.6**
 * Fixes for `Hallowed Concepts` update.
 

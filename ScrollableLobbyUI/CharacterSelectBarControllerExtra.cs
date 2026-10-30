@@ -226,6 +226,7 @@ namespace ScrollableLobbyUI
             HGButton SetupPagingButton(string prefix, string buttonPrefix, System.Action action, string actionName, int siblingIndex, int glyphIndex)
             {
                 var buttonContainer = new GameObject($"{prefix}ButtonContainer");
+                buttonContainer.SetActive(false);
                 buttonContainer.transform.SetParent(transform.parent, false);
                 buttonContainer.transform.SetSiblingIndex(siblingIndex);
                 buttonContainer.layer = 5;
@@ -285,8 +286,6 @@ namespace ScrollableLobbyUI
                 inputBindingDisplayController.axisRange = Rewired.AxisRange.Full;
                 inputBindingDisplayController.useExplicitInputSource = true;
                 inputBindingDisplayController.explicitInputSource = MPEventSystem.InputSource.Gamepad;
-                inputBindingDisplayController.Awake();
-
 
                 var glyphTextLayout = glyphText.AddComponent<LayoutElement>();
                 glyphTextLayout.preferredHeight = buttonSide;
@@ -336,12 +335,15 @@ namespace ScrollableLobbyUI
                 pageEvent.actionEvent = new UnityEngine.Events.UnityEvent();
                 pageEvent.actionEvent.AddListener(new UnityEngine.Events.UnityAction(action));
 
+                button.SetActive(true);
+
                 return buttonComponent;
             }
 
             HGButton SetupPagingButtonCharacterSlot(string prefix, System.Action action, string actionName, int siblingIndex, int glyphIndex, MPEventSystemLocator mpEventSystemLocator, GameObject survivorChoiceGrid, UILayerKey uiLayerKey)
             {
                 GameObject buttonHolder = new GameObject($"{prefix}ButtonContainer");
+                buttonHolder.SetActive(false);
                 buttonHolder.transform.SetParent(transform, false);
                 buttonHolder.transform.SetSiblingIndex(siblingIndex);
                 buttonHolder.layer = 5;
@@ -501,8 +503,6 @@ namespace ScrollableLobbyUI
                 inputBindingDisplayController.axisRange = Rewired.AxisRange.Full;
                 inputBindingDisplayController.useExplicitInputSource = true;
                 inputBindingDisplayController.explicitInputSource = MPEventSystem.InputSource.Gamepad;
-                inputBindingDisplayController.Awake();
-
 
                 var glyphTextLayout = glyphText.AddComponent<LayoutElement>();
                 glyphTextLayout.preferredHeight = buttonSide;
@@ -553,6 +553,8 @@ namespace ScrollableLobbyUI
 
                 var vat = glyph.AddComponent<VariantArrowToggler>();
                 vat.arrow = text;
+
+                buttonHolder.SetActive(true);
 
                 return button;
             }
